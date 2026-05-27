@@ -107,7 +107,7 @@ export default function Footer() {
             © 2026 ZKCreditScore Protocol. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-xs text-emerald-100/30">
-            <span>Built on Polygon zkEVM</span>
+            <span>Built on Solana</span>
             <span>•</span>
             <span>Audited by Trail of Bits & OpenZeppelin</span>
             <span>•</span>

@@ -14,7 +14,7 @@ const PROTOCOL_STATS = {
   insuranceFundSize: 5_000_000,
   protocolRevenueARR: 2_000_000,
   supportedAssets: ["USDC", "USDT", "DAI", "ETH", "WBTC"],
-  chains: ["Polygon zkEVM", "Arbitrum One"],
+  chains: ["Solana Mainnet", "Eclipse (Solana L2)"],
   lastUpdated: new Date().toISOString(),
 };
 

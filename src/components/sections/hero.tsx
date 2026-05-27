@@ -29,7 +29,7 @@ export default function Hero() {
                 className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 px-4 py-1"
               >
                 <Zap className="h-3 w-3 mr-1" />
-                Built on Polygon zkEVM
+                Built on Solana
               </Badge>
             </div>
 

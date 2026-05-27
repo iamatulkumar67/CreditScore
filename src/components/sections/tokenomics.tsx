@@ -67,7 +67,7 @@ export default function Tokenomics() {
             <span className="gradient-text">ZKC</span> Token
           </h2>
           <p className="text-lg text-emerald-100/50 max-w-2xl mx-auto">
-            ERC-20 token on Polygon zkEVM. 1 billion total supply with carefully designed
+            SPL token on Solana. 1 billion total supply with carefully designed
             vesting schedules and utility mechanisms.
           </p>
         </div>
@@ -139,10 +139,10 @@ export default function Tokenomics() {
                 <div className="space-y-3">
                   {[
                     { label: "Token Name", value: "ZKCredit (ZKC)" },
-                    { label: "Standard", value: "ERC-20" },
+                    { label: "Standard", value: "SPL (Token 2022)" },
                     { label: "Total Supply", value: "1,000,000,000 ZKC" },
-                    { label: "Primary Chain", value: "Polygon zkEVM" },
-                    { label: "Bridged To", value: "Ethereum Mainnet" },
+                    { label: "Primary Chain", value: "Solana Mainnet" },
+                    { label: "Bridged To", value: "Ethereum (Wormhole)" },
                   ].map((item) => (
                     <div
                       key={item.label}

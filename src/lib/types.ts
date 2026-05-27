@@ -144,9 +144,9 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
     title: "Mainnet Launch",
     timeline: "Months 7–12",
     milestones: [
-      { id: "M7", title: "Mainnet Launch on Polygon zkEVM", description: "Permissionless testnet", month: "Month 7" },
+      { id: "M7", title: "Mainnet Launch on Solana", description: "Permissionless mainnet", month: "Month 7" },
       { id: "M8", title: "ZKC Token Launch + Governance", description: "Token + governance activation", month: "Month 8" },
-      { id: "M9", title: "Multi-Collateral Support", description: "ETH, WBTC, MATIC, USDC", month: "Month 9" },
+      { id: "M9", title: "Multi-Collateral Support", description: "SOL, USDC, wBTC, mSOL", month: "Month 9" },
       { id: "M10", title: "Composite Credit Score", description: "Full tier system launch", month: "Month 10" },
       { id: "M11", title: "Integration SDK v1.0", description: "First 3 protocol integrations", month: "Month 11" },
       { id: "M12", title: "$50M TVL Target", description: "Liquidity mining program", month: "Month 12" },
@@ -157,7 +157,7 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
     title: "Expansion",
     timeline: "Months 13–24",
     milestones: [
-      { id: "M13", title: "Arbitrum Deployment", description: "Cross-chain credential portability", month: "Month 13" },
+      { id: "M13", title: "Eclipse L2 Deployment", description: "Cross-chain credential portability", month: "Month 13" },
       { id: "M14", title: "Plaid Integration", description: "US/EU market entry", month: "Month 14" },
       { id: "M15", title: "B2B API Launch", description: "White-label for DeFi protocols", month: "Month 16" },
       { id: "M16", title: "Under-collateralized Flash Loans", description: "ZK Premium tier feature", month: "Month 18" },

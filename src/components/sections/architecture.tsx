@@ -36,7 +36,7 @@ const LAYERS = [
   },
   {
     id: "blockchain",
-    name: "Blockchain Layer (L2)",
+    name: "Blockchain Layer (L1)",
     icon: Layers,
     color: "from-emerald-500/20 to-teal-600/10",
     borderColor: "border-emerald-500/20",
@@ -45,7 +45,7 @@ const LAYERS = [
       { name: "ZK Verifier Contract", desc: "Proof verification & SBT issuance", icon: ShieldCheck },
       { name: "Lending Pool Engine", desc: "Deposit, borrow, liquidate", icon: Database },
       { name: "Credential Registry", desc: "SBT management & queries", icon: Link2 },
-      { name: "Chainlink Oracle", desc: "Price feeds & data attestation", icon: Cloud },
+      { name: "Pyth / Switchboard", desc: "Solana-native price oracles", icon: Cloud },
       { name: "Governance Module", desc: "ZKC token voting & proposals", icon: Server },
       { name: "Treasury / Insurance", desc: "Protocol reserves & safety fund", icon: Database },
     ],
@@ -168,16 +168,16 @@ export default function Architecture() {
             {[
               { label: "ZK Circuits", tech: "Circom 2.0" },
               { label: "Proving System", tech: "Groth16 (snarkjs)" },
-              { label: "Smart Contracts", tech: "Solidity 0.8.x" },
-              { label: "Primary Chain", tech: "Polygon zkEVM" },
-              { label: "Secondary Chain", tech: "Arbitrum One" },
-              { label: "Oracle", tech: "Chainlink + Pyth" },
+              { label: "Smart Contracts", tech: "Rust (Anchor 0.30)" },
+              { label: "Primary Chain", tech: "Solana Mainnet" },
+              { label: "Secondary Chain", tech: "Eclipse (Solana L2)" },
+              { label: "Oracle", tech: "Pyth + Switchboard" },
               { label: "Data Attestation", tech: "zkTLS (Reclaim)" },
               { label: "Client App", tech: "React Native" },
               { label: "India Data", tech: "Sahamati AA" },
-              { label: "Indexing", tech: "The Graph" },
-              { label: "Cross-chain", tech: "LayerZero v2" },
-              { label: "Gas Abstraction", tech: "Gelato Network" },
+              { label: "Indexing", tech: "The Graph (Solana)" },
+              { label: "Cross-chain", tech: "Wormhole" },
+              { label: "Scheduling", tech: "Solana Clockwork" },
             ].map((item) => (
               <div
                 key={item.label}
