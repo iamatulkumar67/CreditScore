@@ -1,0 +1,6 @@
+export const SOLANA_PROGRAM_ID = {
+  verifier: '9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh',
+  lendingPool: 'HbHw6ib3eCfxbV1tv7X817VZ9J9tR4ZLGpNEQJ2jYDQo',
+  credential: '9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh',
+  zkcToken: 'AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ',
+};

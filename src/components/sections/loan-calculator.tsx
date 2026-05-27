@@ -14,7 +14,7 @@ import { Calculator, TrendingDown, DollarSign, PiggyBank } from "lucide-react";
 import { CREDIT_TIERS } from "@/lib/types";
 
 const BASE_RATE = 10;
-const COLLATERAL_PRICE = 175;
+const COLLATERAL_PRICE = 85;
 
 export default function LoanCalculator() {
   const [loanAmount, setLoanAmount] = useState(5000);

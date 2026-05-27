@@ -3,6 +3,7 @@ members = [
     "programs/zk-credit-verifier",
     "programs/zk-lending-pool",
     "programs/zkc-token",
+    "programs/zk-governance",
 ]
 
 [profile.release]

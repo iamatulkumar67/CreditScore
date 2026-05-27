@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("ZKVrf1111111111111111111111111111111111");
+declare_id!("9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh");
 
 #[program]
 pub mod zk_credit_verifier {

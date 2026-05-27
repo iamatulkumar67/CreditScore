@@ -1,0 +1,21 @@
+[package]
+name = "zk-governance"
+version = "0.1.0"
+description = "ZKCreditScore protocol governance — proposal + voting + timelock"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-spl = "0.30.1"
+zkc-token = { path = "../zkc-token", features = ["cpi"] }
+solana-program = "1.18.17"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []

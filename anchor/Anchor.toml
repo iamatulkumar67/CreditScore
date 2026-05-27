@@ -6,9 +6,10 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-zk_credit_verifier = "ZKVrf1111111111111111111111111111111111"
-zk_lending_pool = "ZKPool111111111111111111111111111111111"
-zkc_token = "ZKCToken1111111111111111111111111111111"
+zk_credit_verifier = "9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh"
+zk_lending_pool = "HbHw6ib3eCfxbV1tv7X817VZ9J9tR4ZLGpNEQJ2jYDQo"
+zkc_token = "AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ"
+zk_governance = "4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT"
 
 [scripts]
 test = "cargo test"

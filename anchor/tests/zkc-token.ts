@@ -1,54 +1,68 @@
-const anchor = require("@coral-xyz/anchor");
-const { PublicKey, SystemProgram } = require("@solana/web3.js");
-const {
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
+import {
   TOKEN_2022_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-} = require("@solana/spl-token");
+} from "@solana/spl-token";
+import { expect, assert } from "chai";
 
 describe("zkc-token", () => {
   const provider = anchor.AnchorProvider.local();
   anchor.setProvider(provider);
-  const program = anchor.workspace.ZkcToken;
+  const program = anchor.workspace.ZkcToken as Program;
 
-  let mintPda;
-  let mintAuthorityPda;
-  let configPda;
-  let treasuryPda;
-  let treasuryAuthorityPda;
+  const authority = provider.wallet.publicKey;
+  const [mintPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("mint")],
+    program.programId,
+  );
+  const [mintAuthorityPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("mint")],
+    program.programId,
+  );
+  const [configPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("config")],
+    program.programId,
+  );
+  const [treasuryAuthorityPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("treasury")],
+    program.programId,
+  );
+  const treasuryPda = getAssociatedTokenAddressSync(
+    mintPda,
+    treasuryAuthorityPda,
+    true,
+    TOKEN_2022_PROGRAM_ID,
+  );
+  const [stakingVaultPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("staking-vault")],
+    program.programId,
+  );
+
+  const user = Keypair.generate();
+  const [userStakePda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("stake"), user.publicKey.toBuffer()],
+    program.programId,
+  );
 
   before(async () => {
-    [mintPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("mint")],
-      program.programId
-    );
-    [mintAuthorityPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("mint")],
-      program.programId
-    );
-    [configPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("config")],
-      program.programId
-    );
-    [treasuryAuthorityPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("treasury")],
-      program.programId
-    );
-    treasuryPda = getAssociatedTokenAddressSync(
-      mintPda,
-      treasuryAuthorityPda,
-      true,
-      TOKEN_2022_PROGRAM_ID
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(
+        user.publicKey,
+        10 * anchor.web3.LAMPORTS_PER_SOL,
+      ),
     );
   });
 
-  it("initializes the ZKC token with total supply", async () => {
-    const totalSupply = new anchor.BN(1_000_000_000_000_000_000);
+  describe("Token Initialization", () => {
+    it("initializes the ZKC token with total supply", async () => {
+      const totalSupply = new anchor.BN(1_000_000_000_000_000_000);
 
-    try {
-      await program.methods
+      const txSig = await program.methods
         .initializeToken(totalSupply)
         .accounts({
-          authority: provider.wallet.publicKey,
+          authority,
           mint: mintPda,
           mintAuthority: mintAuthorityPda,
           treasury: treasuryPda,
@@ -59,78 +73,242 @@ describe("zkc-token", () => {
         })
         .rpc();
 
-      console.log("Token initialized");
-    } catch (e) {
-      console.log("Token may already exist:", e.message);
-    }
+      expect(txSig).to.be.a("string");
 
-    const config = await program.account.tokenConfig.fetch(configPda);
-    console.log("Total supply:", config.totalSupply.toString());
-    console.log("Decimals:", config.decimals);
-    console.log("Authority:", config.authority.toBase58());
+      const config = await program.account.tokenConfig.fetch(configPda);
+      expect(config.totalSupply.toString()).to.equal(totalSupply.toString());
+      expect(config.decimals).to.equal(9);
+      expect(config.authority.toString()).to.equal(authority.toString());
+      expect(config.paused).to.be.false;
+    });
+
+    it("cannot re-initialize (locks config)", async () => {
+      try {
+        await program.methods
+          .initializeToken(new anchor.BN(1))
+          .accounts({
+            authority,
+            mint: mintPda,
+            mintAuthority: mintAuthorityPda,
+            treasury: treasuryPda,
+            treasuryAuthority: treasuryAuthorityPda,
+            config: configPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("already in use");
+      }
+    });
   });
 
-  it("allows staking ZKC tokens", async () => {
-    const user = provider.wallet.publicKey;
-    const [stakeAccountPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("stake"), user.toBuffer()],
-      program.programId
-    );
-    const [stakingVaultPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("staking-vault")],
-      program.programId
-    );
+  describe("Staking", () => {
+    it("rejects stake below minimum", async () => {
+      const smallAmount = new anchor.BN(1_000);
 
-    const userTokenAccount = getAssociatedTokenAddressSync(
-      mintPda,
-      user,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
+      try {
+        await program.methods
+          .stakeTokens(smallAmount)
+          .accounts({
+            user: user.publicKey,
+            userTokenAccount: getAssociatedTokenAddressSync(
+              mintPda, user.publicKey, false, TOKEN_2022_PROGRAM_ID,
+            ),
+            mint: mintPda,
+            stakingVault: stakingVaultPda,
+            stakeAccount: userStakePda,
+            config: configPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([user])
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("InsufficientStakeAmount");
+      }
+    });
 
-    const stakeAmount = new anchor.BN(10_000_000_000_000);
+    it("allows staking ZKC tokens", async () => {
+      const stakeAmount = new anchor.BN(10_000_000_000_000);
+      const userTokenAccount = getAssociatedTokenAddressSync(
+        mintPda, user.publicKey, false, TOKEN_2022_PROGRAM_ID,
+      );
 
-    try {
+      // Stake requires user to have tokens → use authority for this test
+      const [authorityStakePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("stake"), authority.toBuffer()],
+        program.programId,
+      );
+
       await program.methods
         .stakeTokens(stakeAmount)
         .accounts({
-          user: user,
-          userTokenAccount: userTokenAccount,
+          user: authority,
+          userTokenAccount: getAssociatedTokenAddressSync(
+            mintPda, authority, false, TOKEN_2022_PROGRAM_ID,
+          ),
           mint: mintPda,
           stakingVault: stakingVaultPda,
-          stakeAccount: stakeAccountPda,
+          stakeAccount: authorityStakePda,
           config: configPda,
           tokenProgram: TOKEN_2022_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
 
-      console.log("Staked successfully");
-    } catch (e) {
-      console.log("Stake test (may fail without tokens):", e.message);
-    }
+      const stakeAcc = await program.account.stakeAccount.fetch(authorityStakePda);
+      expect(stakeAcc.owner.toString()).to.equal(authority.toString());
+      expect(stakeAcc.amount.toString()).to.equal(stakeAmount.toString());
+      expect(stakeAcc.pendingRewards.toNumber()).to.equal(0);
+    });
+
+    it("rejects unstake from non-owner", async () => {
+      const [authorityStakePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("stake"), authority.toBuffer()],
+        program.programId,
+      );
+
+      try {
+        await program.methods
+          .unstakeTokens(new anchor.BN(1_000_000_000_000))
+          .accounts({
+            user: user.publicKey,
+            userTokenAccount: getAssociatedTokenAddressSync(
+              mintPda, user.publicKey, false, TOKEN_2022_PROGRAM_ID,
+            ),
+            mint: mintPda,
+            stakingVault: stakingVaultPda,
+            stakeAccount: authorityStakePda,
+            config: configPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([user])
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("NotStakeOwner");
+      }
+    });
+
+    it("rejects unstaking more than staked", async () => {
+      const [authorityStakePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("stake"), authority.toBuffer()],
+        program.programId,
+      );
+
+      try {
+        await program.methods
+          .unstakeTokens(new anchor.BN(999_999_999_999_999_999))
+          .accounts({
+            user: authority,
+            userTokenAccount: getAssociatedTokenAddressSync(
+              mintPda, authority, false, TOKEN_2022_PROGRAM_ID,
+            ),
+            mint: mintPda,
+            stakingVault: stakingVaultPda,
+            stakeAccount: authorityStakePda,
+            config: configPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("InsufficientStakedBalance");
+      }
+    });
   });
 
-  it("returns fee discount based on stake", async () => {
-    const user = provider.wallet.publicKey;
-    const [stakeAccountPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("stake"), user.toBuffer()],
-      program.programId
-    );
+  describe("Fee Discount", () => {
+    it("returns 0 fee discount for unstaked user", async () => {
+      const [noStakePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("stake"), user.publicKey.toBuffer()],
+        program.programId,
+      );
 
-    try {
+      try {
+        const discount = await program.methods
+          .getFeeDiscount()
+          .accounts({
+            user: user.publicKey,
+            stakeAccount: noStakePda,
+            config: configPda,
+          })
+          .view();
+
+        expect(discount.toNumber()).to.equal(0);
+      } catch (e) {
+        // Account may not exist — acceptable
+        expect(e.message).to.include("Account does not exist");
+      }
+    });
+
+    it("returns non-zero fee discount for staked user", async () => {
+      const [authorityStakePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("stake"), authority.toBuffer()],
+        program.programId,
+      );
+
       const discount = await program.methods
         .getFeeDiscount()
         .accounts({
-          user: user,
-          stakeAccount: stakeAccountPda,
+          user: authority,
+          stakeAccount: authorityStakePda,
           config: configPda,
         })
         .view();
 
-      console.log("Fee discount (basis points):", discount.toString());
-    } catch (e) {
-      console.log("Fee discount check:", e.message);
-    }
+      // Tier 1 discount (10,000 ZKC staked) = 1000 bps
+      expect(discount.toNumber()).to.equal(1000);
+    });
+  });
+
+  describe("Config Management", () => {
+    it("returns correct config values", async () => {
+      const config = await program.account.tokenConfig.fetch(configPda);
+      expect(config.paused).to.be.false;
+      expect(config.decimals).to.equal(9);
+      expect(config.authority.toString()).to.equal(authority.toString());
+    });
+
+    it("allows authority to pause", async () => {
+      await program.methods
+        .updateConfig(null, true)
+        .accounts({ authority, config: configPda })
+        .rpc();
+
+      const config = await program.account.tokenConfig.fetch(configPda);
+      expect(config.paused).to.be.true;
+    });
+
+    it("rejects config update from non-authority", async () => {
+      try {
+        await program.methods
+          .updateConfig(null, false)
+          .accounts({
+            authority: user.publicKey,
+            config: configPda,
+          })
+          .signers([user])
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("Unauthorized");
+      }
+    });
+
+    it("allows authority to unpause and resume", async () => {
+      await program.methods
+        .updateConfig(null, false)
+        .accounts({ authority, config: configPda })
+        .rpc();
+
+      const config = await program.account.tokenConfig.fetch(configPda);
+      expect(config.paused).to.be.false;
+    });
   });
 });

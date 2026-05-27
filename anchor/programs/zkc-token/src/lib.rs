@@ -8,7 +8,7 @@ use anchor_spl::token_2022::{
 };
 use anchor_spl::associated_token::AssociatedToken;
 
-declare_id!("ZKCToken1111111111111111111111111111111");
+declare_id!("AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ");
 
 const MIN_STAKE_AMOUNT: u64 = 1_000_000_000_000;
 const STAKING_REWARD_RATE: u64 = 500;
