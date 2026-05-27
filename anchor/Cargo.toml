@@ -1,6 +1,8 @@
 [workspace]
 members = [
-    "programs/*",
+    "programs/zk-credit-verifier",
+    "programs/zk-lending-pool",
+    "programs/zkc-token",
 ]
 
 [profile.release]

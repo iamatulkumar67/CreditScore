@@ -8,6 +8,7 @@ wallet = "~/.config/solana/id.json"
 [programs.localnet]
 zk_credit_verifier = "ZKVrf1111111111111111111111111111111111"
 zk_lending_pool = "ZKPool111111111111111111111111111111111"
+zkc_token = "ZKCToken1111111111111111111111111111111"
 
 [scripts]
 test = "cargo test"
