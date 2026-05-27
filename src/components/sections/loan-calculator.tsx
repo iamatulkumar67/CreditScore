@@ -13,8 +13,8 @@ import {
 import { Calculator, TrendingDown, DollarSign, PiggyBank } from "lucide-react";
 import { CREDIT_TIERS } from "@/lib/types";
 
-const BASE_RATE = 10; // 10% APR base rate
-const COLLATERAL_PRICE = 3000; // ETH price assumption
+const BASE_RATE = 10;
+const COLLATERAL_PRICE = 175;
 
 export default function LoanCalculator() {
   const [loanAmount, setLoanAmount] = useState(5000);
@@ -38,8 +38,8 @@ export default function LoanCalculator() {
     const totalPayment = monthlyPayment * duration;
     const totalInterest = totalPayment - loanAmount;
 
-    const ethCollateral = (zkCollateral / COLLATERAL_PRICE).toFixed(3);
-    const standardEthCollateral = (standardCollateral / COLLATERAL_PRICE).toFixed(3);
+    const solCollateral = (zkCollateral / COLLATERAL_PRICE).toFixed(2);
+    const standardSolCollateral = (standardCollateral / COLLATERAL_PRICE).toFixed(2);
 
     return {
       standardCollateral,
@@ -50,8 +50,8 @@ export default function LoanCalculator() {
       monthlyPayment,
       totalPayment,
       totalInterest,
-      ethCollateral,
-      standardEthCollateral,
+      solCollateral,
+      standardSolCollateral,
     };
   }, [loanAmount, tier, duration]);
 
@@ -191,7 +191,7 @@ export default function LoanCalculator() {
                       Standard DeFi
                     </div>
                     <div className="text-lg font-semibold text-red-400/80">
-                      ${calc.standardCollateral.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({calc.standardEthCollateral} ETH)
+                      ${calc.standardCollateral.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({calc.standardSolCollateral} SOL)
                     </div>
                   </div>
                   <div className="text-emerald-500/40">→</div>
@@ -200,7 +200,7 @@ export default function LoanCalculator() {
                       With ZKCreditScore
                     </div>
                     <div className="text-lg font-semibold text-emerald-400">
-                      ${calc.zkCollateral.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({calc.ethCollateral} ETH)
+                      ${calc.zkCollateral.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({calc.solCollateral} SOL)
                     </div>
                   </div>
                 </div>

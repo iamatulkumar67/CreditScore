@@ -142,7 +142,7 @@ export default function Tokenomics() {
                     { label: "Standard", value: "SPL (Token 2022)" },
                     { label: "Total Supply", value: "1,000,000,000 ZKC" },
                     { label: "Primary Chain", value: "Solana Mainnet" },
-                    { label: "Bridged To", value: "Ethereum (Wormhole)" },
+                    { label: "Bridged To", value: "Eclipse (Solana L2)" },
                   ].map((item) => (
                     <div
                       key={item.label}

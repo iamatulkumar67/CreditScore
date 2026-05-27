@@ -213,7 +213,7 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 - FR-013: SBT stores only: user address, claim hash, expiry timestamp, issuer address — NO actual score/data
 - FR-014: Nullifier mechanism to prevent double-spending same proof
 - FR-015: Emergency pause mechanism (multisig 3/5)
-- FR-016: Upgrade via UUPS proxy pattern
+- FR-016: Upgrade via Anchor program upgrade authority (BPF upgradeable)
 
 ### 6.3 Feature: Lending Pool Engine
 
@@ -222,7 +222,7 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 **Description:** Core lending/borrowing smart contracts with ZK-gated collateral ratios.
 
 **Requirements:**
-- FR-020: Standard assets v1.0: USDC, USDT, DAI, ETH, WBTC
+- FR-020: Standard assets v1.0: USDC, USDT, SOL, mSOL, jitoSOL
 - FR-021: Tiered collateral ratios based on ZK credit level:
 
 | Credit Tier | Collateral Ratio | Max Loan | Interest Rate Modifier |
@@ -249,10 +249,10 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 **Requirements:**
 - FR-030: Public read function: `hasValidCredential(address, claimType)` → bool
 - FR-031: No personal data stored — only cryptographic commitments
-- FR-032: Cross-protocol compatibility: ERC-compatible interface
+- FR-032: Cross-protocol compatibility: SPL Token interface
 - FR-033: Credential delegation: user can delegate credential read to another address
 - FR-034: Revocation: user can burn their own SBT anytime
-- FR-035: Multi-chain registry via cross-chain message passing (LayerZero v2)
+- FR-035: Multi-chain registry via cross-chain message passing (Wormhole)
 
 ### 6.5 Feature: Oracle Integration Layer
 
@@ -261,7 +261,7 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 **Description:** Secure data feeds for asset prices aur off-chain data attestation.
 
 **Requirements:**
-- FR-040: Chainlink Price Feeds for all supported assets
+- FR-040: Pyth + Switchboard price feeds for all supported assets
 - FR-041: zkTLS attestation for real-time income verification (Stormbit/Reclaim Protocol)
 - FR-042: Account Aggregator (India) webhook for real-time bank data updates
 - FR-043: Heartbeat: price feed update within 10 minutes, else pause borrowing
@@ -307,8 +307,8 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 │         └───────────────────┴────────────────────┘             │
 │                             │                                   │
 │  ┌──────────────┐   ┌───────┴──────┐   ┌──────────────────┐   │
-│  │  Chainlink   │   │  Governance  │   │   Treasury /     │   │
-│  │  Oracle      │   │  Module      │   │   Insurance Fund │   │
+│  │  Pyth /      │   │  Governance  │   │   Treasury /     │   │
+│  │  Switchboard │   │  Module      │   │   Insurance Fund │   │
 │  └──────────────┘   └──────────────┘   └──────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
             ▲
@@ -349,19 +349,19 @@ Step 5: Lending Interaction
 
 ### 7.3 Deployment Architecture
 
-**Blockchain:** Polygon zkEVM (primary) + Arbitrum (secondary)  
+**Blockchain:** Solana Mainnet (primary) + Eclipse (Solana L2 — secondary)  
 **Rationale:**
-- Polygon zkEVM: EVM-equivalent, $0.00275 per tx, 200-second proof generation, backed by $1B+ ecosystem
-- Arbitrum: Largest DeFi TVL on L2, Aave/Compound already deployed, easy integrations
-- Ethereum Mainnet: Credential Registry anchor (for composability and finality)
+- Solana: ~$0.0002 per tx, 400ms block time, 2,000+ TPS, $6B+ DeFi TVL. Best L1 for low-cost ZK proof verification
+- Eclipse: Solana L2 with zkEVM compatibility for EVM developers to consume credentials
+- Solana Mainnet: Credential Registry anchor (for composability and finality)
 
 **Client App:**
 - React Native (iOS + Android)
 - Chrome Extension (desktop)
-- WalletConnect integration
+- Solana wallet integration (Phantom, Backpack, Solflare)
 
 **ZK Prover:**
-- SnarkJS (WASM) — runs in browser/mobile
+- SnarkJS (WASM) — runs in browser/mobile (BN254 Groth16, Solana-compatible)
 - Hardware acceleration via WebGPU (where available)
 - Fallback: trusted prover service with TEE (Phala Network) for underpowered devices
 
@@ -490,185 +490,98 @@ template CompositeCreditScore() {
 
 ---
 
-## 9. Smart Contract Specifications
+## 9. Smart Contract Specifications (Anchor / Rust)
 
-### 9.1 Contract: ZKCreditVerifier.sol
+Smart contracts Solana Anchor framework mein Rust mein likhe gaye hain. Source code available at `anchor/programs/`.
 
-```solidity
-// SPDX-License-Identifier: MIT
-// ZKCreditVerifier.sol — Core ZK proof verification
+### 9.1 Program: zk-credit-verifier
 
-interface IZKCreditVerifier {
-    
-    struct Proof {
-        uint[2] a;
-        uint[2][2] b;
-        uint[2] c;
-    }
-    
-    struct CreditClaim {
-        ClaimType claimType;
-        uint256 threshold;
-        uint256 expiry;
-        bytes32 nullifier;
-        address userAddress;
-    }
-    
-    enum ClaimType {
-        CREDIT_SCORE_ABOVE,
-        MONTHLY_INCOME_ABOVE,
-        DTI_BELOW,
-        NO_DEFAULT,
-        EMPLOYMENT_STATUS,
-        COMPOSITE_TIER
-    }
-    
-    // Core verification function
-    function verifyAndIssueCredential(
-        Proof calldata proof,
-        CreditClaim calldata claim
-    ) external returns (uint256 sbtTokenId);
-    
-    // Query credential validity
-    function hasValidCredential(
-        address user,
-        ClaimType claimType,
-        uint256 requiredThreshold
-    ) external view returns (bool);
-    
-    // Get user's credit tier (0-4)
-    function getCreditTier(address user) 
-        external view returns (uint8 tier, uint256 expiry);
-    
-    // Revoke own credential
-    function revokeCredential(uint256 tokenId) external;
-    
-    // Events
-    event CredentialIssued(
-        address indexed user, 
-        ClaimType indexed claimType,
-        uint8 tier,
-        uint256 expiry
-    );
-    event CredentialRevoked(address indexed user, uint256 tokenId);
-    event NullifierUsed(bytes32 indexed nullifier);
+**Account:** `Credential`
+```rust
+pub struct Credential {
+    pub owner: Pubkey,
+    pub credit_tier: u8,
+    pub claim_type: u8,
+    pub threshold: u64,
+    pub claims_bitmap: u8,
+    pub issued_at: u64,
+    pub expires_at: u64,
+    pub issuer: Pubkey,
+    pub is_revoked: bool,
+    pub bump: u8,
 }
 ```
 
-### 9.2 Contract: ZKLendingPool.sol
+**Instructions:**
+- `verify_and_issue_credential(proof, claim)` → Creates/updates Credential PDA
+- `has_valid_credential()` → Read-only check of credential validity
+- `revoke_credential()` → Marks credential as revoked
+- `update_config()` → Admin: protocol parameters
 
-```solidity
-interface IZKLendingPool {
-    
-    struct LoanTerms {
-        address borrower;
-        address collateralAsset;
-        uint256 collateralAmount;
-        address borrowAsset;
-        uint256 borrowAmount;
-        uint256 interestRate;        // APR in basis points
-        uint256 collateralRatio;     // in basis points (e.g., 8000 = 80%)
-        uint8 creditTier;
-        uint256 startTimestamp;
-        uint256 maturityTimestamp;   // 0 = no fixed maturity (revolving)
-    }
-    
-    // Get applicable collateral ratio for user
-    function getCollateralRatio(address user, address borrowAsset) 
-        external view returns (uint256 ratio, uint256 maxBorrow);
-    
-    // Deposit collateral and borrow
-    function depositAndBorrow(
-        address collateralAsset,
-        uint256 collateralAmount,
-        address borrowAsset,
-        uint256 borrowAmount
-    ) external returns (uint256 loanId);
-    
-    // Repay loan (partial or full)
-    function repay(uint256 loanId, uint256 amount) external;
-    
-    // Liquidate undercollateralized position
-    function liquidate(
-        address borrower,
-        address collateralAsset,
-        address debtAsset,
-        uint256 debtToCover
-    ) external returns (uint256 collateralReceived);
-    
-    // Get current utilization rate
-    function getUtilizationRate(address asset) 
-        external view returns (uint256);
-    
-    // Get current borrow rate
-    function getBorrowRate(address asset) 
-        external view returns (uint256 aprBasisPoints);
-    
-    events:
-    event LoanCreated(uint256 indexed loanId, address indexed borrower, uint256 amount, uint8 creditTier);
-    event LoanRepaid(uint256 indexed loanId, uint256 amount, bool fullRepayment);
-    event Liquidation(address indexed borrower, address liquidator, uint256 debtCovered, uint256 collateralSeized);
+**Account:** `Nullifier` — Prevents proof replay  
+**Account:** `VerifierConfig` — Protocol parameters
+
+### 9.2 Program: zk-lending-pool
+
+**Account:** `LendingPool`
+```rust
+pub struct LendingPool {
+    pub authority: Pubkey,
+    pub mint: Pubkey,
+    pub total_deposits: u64,
+    pub total_borrows: u64,
+    pub utilization_rate: u64,
+    pub base_rate: u64,
+    pub optimal_utilization: u64,
+    pub slope1: u64,
+    pub slope2: u64,
+    pub paused: bool,
+    pub bump: u8,
 }
 ```
 
-### 9.3 Contract: ZKCreditSBT.sol
-
-```solidity
-// Non-transferable Soulbound Token for ZK credentials
-// Extends ERC-721 with transfer restrictions
-
-interface IZKCreditSBT {
-    
-    struct TokenMetadata {
-        ClaimType[] claims;          // Which claims are proven
-        uint8 creditTier;
-        uint256 issuedAt;
-        uint256 expiresAt;
-        address issuer;              // ZKCreditVerifier address
-        bytes32 credentialHash;      // Hash of all claims combined
-        // NOTE: No actual scores, income values, or personal data stored
-    }
-    
-    // Soulbound — override transfer to revert always
-    function transferFrom(address, address, uint256) external pure;
-    // → revert("ZKCreditSBT: Soulbound — non-transferable");
-    
-    function getCredentialInfo(uint256 tokenId) 
-        external view returns (TokenMetadata memory);
-    
-    function getUserTokenId(address user) 
-        external view returns (uint256);
-    
-    function isExpired(uint256 tokenId) 
-        external view returns (bool);
+**Account:** `Loan`
+```rust
+pub struct Loan {
+    pub borrower: Pubkey,
+    pub collateral_mint: Pubkey,
+    pub collateral_amount: u64,
+    pub borrow_mint: Pubkey,
+    pub borrow_amount: u64,
+    pub interest_rate: u64,
+    pub collateral_ratio: u64,
+    pub credit_tier_at_issuance: u8,
+    pub start_timestamp: u64,
+    pub status: u8,
+    pub repaid_amount: u64,
+    pub bump: u8,
 }
 ```
 
-### 9.4 Contract: InterestRateModel.sol
+**Instructions:**
+- `initialize_pool(config)` → Creates a new lending pool for an SPL token
+- `deposit_and_borrow(collateral, borrow)` → Locks collateral via SPL Token transfer, disburses loan
+- `repay(amount)` → Repays partial or full loan
+- `liquidate(debt_to_cover)` → Liquidates underwater positions (5% below collateral ratio)
+- `update_pool_config(config)` → Admin: kink model parameters
 
-```solidity
+### 9.3 Interest Rate Model (Kink)
+
+```rust
 // Kink model with credit tier modifier
-
-// Base Parameters:
 // Base Rate: 2% APR
 // Optimal Utilization: 80%
-// Slope 1 (below optimal): 8% APR (at 100% utilization below kink)
-// Slope 2 (above optimal): 75% APR (above kink, discourages over-utilization)
+// Slope 1 (below optimal): 8% APR
+// Slope 2 (above optimal): 75% APR
 
-// Credit tier modifier reduces borrower's rate:
-// Tier 0 (no credential): +0% (base rate)
-// Tier 1 (Basic): -2%
-// Tier 2 (Good): -4%
-// Tier 3 (Excellent): -6%
-// Tier 4 (Premium): -8%
+// Credit tier modifier:
+// Tier 0: +0%   | Tier 1: -2%   | Tier 2: -4%
+// Tier 3: -6%   | Tier 4: -8%
 
-function getBorrowRate(
-    uint256 utilizationRate,
-    uint8 borrowerCreditTier
-) external pure returns (uint256 annualRate) {
-    uint256 baseRate = calculateKinkRate(utilizationRate);
-    uint256 tierDiscount = tierDiscounts[borrowerCreditTier];
-    return baseRate > tierDiscount ? baseRate - tierDiscount : MIN_RATE;
+fn get_borrow_rate(utilization, credit_tier, pool) -> u64 {
+    let base = kink_rate(utilization, pool);
+    let discount = TIER_DISCOUNTS[credit_tier];
+    max(base - discount, MIN_RATE)
 }
 ```
 
@@ -727,7 +640,7 @@ interface LoanRecord {
   loanId: string;
   borrower: string;
   collateral: {
-    asset: string;               // ERC-20 address
+    asset: string;               // SPL Token mint address
     amount: BigNumber;
     valueUSD: BigNumber;         // at time of loan creation
   };
@@ -757,7 +670,7 @@ interface LoanRecord {
 
 ```
 1. User downloads ZKCreditScore app
-2. Connects wallet (MetaMask / WalletConnect)
+2. Connects wallet (Phantom / Backpack / Solflare)
 3. Selects data source:
    a. India: Account Aggregator (AA) consent flow
    b. US/EU: Plaid Link
@@ -770,7 +683,7 @@ interface LoanRecord {
    - (Can prove multiple claims in one proof batch)
 7. App runs ZK circuit (shows progress: "Generating proof... 15s")
 8. ZK proof generated locally (takes ~20-30s)
-9. App submits proof to ZKCreditVerifier on-chain (gas paid by user OR meta-tx via Gelato)
+9. App submits proof to ZKCreditVerifier on-chain (tx fee paid by user OR gas subsidized via ZKC staking)
 10. Smart contract verifies proof (on-chain, ~2s)
 11. SBT minted to user wallet
 12. User sees: "ZK Credit Credential: Good (Tier 2) — Valid until [date]"
@@ -785,9 +698,9 @@ interface LoanRecord {
    "Your credit tier: Good (Tier 2)"
    "You qualify for up to $50,000 USDC at 80% LTV at 7.5% APR"
 4. User selects:
-   - Collateral asset: ETH (1.0 ETH = $3,000)
+   - Collateral asset: SOL (35 SOL = $3,000 at $85/SOL)
    - Borrow amount: $2,400 USDC (80% LTV)
-5. User approves collateral (ERC-20 approve tx)
+5. User approves collateral (SPL Token approve tx)
 6. User calls depositAndBorrow()
    - Protocol checks: SBT valid? collateral sufficient at 80% LTV? → yes
    - Collateral locked in vault
@@ -848,8 +761,8 @@ interface ZKProverSDK {
   // Submit proof on-chain
   submitProof(
     proof: ZKProof,
-    signer: ethers.Signer
-  ): Promise<ethers.ContractTransaction>;
+    signer: anchor.Wallet
+  ): Promise<TransactionSignature>;
   
   // Estimate proof generation time
   estimateProofTime(claim: ClaimRequest): Promise<number>;  // seconds
@@ -895,9 +808,9 @@ interface ZKCreditIntegrationSDK {
     interestRateModifier: number;   // basis points discount
   }>;
   
-  // Get Solidity interface for on-chain integration
-  getVerifierInterface(): string;  // ABI
-  getVerifierAddress(chainId: number): string;
+  // Get Anchor interface for on-chain integration
+  getVerifierInterface(): string;  // IDL
+  getVerifierAddress(): string;
 }
 ```
 
@@ -930,9 +843,9 @@ GET /leaderboard
 ### 13.1 ZKC Token Overview
 
 **Token:** ZKC (ZKCredit)  
-**Standard:** ERC-20  
+**Standard:** SPL Token (Token 2022)  
 **Total Supply:** 1,000,000,000 ZKC (1 billion)  
-**Chain:** Polygon zkEVM (primary), bridged to Ethereum
+**Chain:** Solana Mainnet (primary), bridged to Eclipse (Solana L2)
 
 ### 13.2 Allocation
 
@@ -977,11 +890,11 @@ GET /leaderboard
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Reentrancy attack | Critical | ReentrancyGuard on all state-changing functions |
-| Oracle manipulation | High | Multi-oracle (Chainlink + Pyth), TWAP pricing, circuit breakers |
+| Reentrancy attack | Critical | Anchor's type-safe CPI, SPL Token checks |
+| Oracle manipulation | High | Multi-oracle (Pyth + Switchboard), TWAP pricing, circuit breakers |
 | ZK proof forgery | Critical | Trusted setup audit, multiple audits of verifier contract |
-| Governance attack | High | Timelock, security council veto, quorum requirements |
-| Upgrade vulnerability | High | UUPS proxy + multisig upgrade key, 48hr timelock |
+| Governance attack | High | Timelock (48hr), security council veto, quorum (10%) |
+| Upgrade vulnerability | High | Anchor BPF upgrade + multisig upgrade authority, 48hr timelock |
 
 ### 14.2 Credit Risk
 
@@ -1008,7 +921,7 @@ GET /leaderboard
 - 5% of all origination fees go to Insurance Fund
 - Minimum 10% of protocol TVL maintained as reserve
 - Insurance covers: smart contract exploits (up to 80% of loss), oracle failures
-- Third-party insurance: Nexus Mutual / InsurAce integration optional
+- Third-party insurance: Solace / Neptune Mutual integration optional
 
 ---
 
@@ -1058,7 +971,7 @@ For institutional pools (separate from permissionless pools):
 | M2 | Smart contracts v0.1 (Verifier + SBT) testnet deploy | Month 3 |
 | M3 | Client app MVP (iOS + Chrome) with Account Aggregator integration | Month 4 |
 | M4 | Lending Pool v0.1 testnet (USDC only, single collateral type) | Month 4 |
-| M5 | Security audit — Trail of Bits (circuits) + OpenZeppelin (contracts) | Month 5–6 |
+| M5 | Security audit — Trail of Bits (circuits) + Neodyme (Anchor contracts) | Month 5–6 |
 | M6 | Trusted setup ceremony (public, verifiable) | Month 6 |
 
 **Phase 1 Budget:** $1.2M (team: 8 people — 3 ZK engineers, 2 smart contract, 2 frontend, 1 product)
@@ -1067,9 +980,9 @@ For institutional pools (separate from permissionless pools):
 
 | Milestone | Deliverable | Timeline |
 |---|---|---|
-| M7 | Mainnet launch on Polygon zkEVM — permissionless testnet | Month 7 |
+| M7 | Mainnet launch on Solana — permissionless mainnet | Month 7 |
 | M8 | ZKC token launch + governance activation | Month 8 |
-| M9 | Multi-collateral support (ETH, WBTC, MATIC, USDC) | Month 9 |
+| M9 | Multi-collateral support (SOL, mSOL, jitoSOL, USDC) | Month 9 |
 | M10 | Composite credit score circuit + tier system full launch | Month 10 |
 | M11 | Integration SDK v1.0 — first 3 protocol integrations | Month 11 |
 | M12 | $50M TVL target — liquidity mining program | Month 12 |
@@ -1080,7 +993,7 @@ For institutional pools (separate from permissionless pools):
 
 | Milestone | Deliverable |
 |---|---|
-| M13 | Arbitrum deployment + cross-chain credential portability |
+| M13 | Eclipse L2 deployment + cross-chain credential portability via Wormhole |
 | M14 | Plaid integration (US/EU market entry) |
 | M15 | B2B API — white-label for other DeFi protocols |
 | M16 | Under-collateralized flash loans for ZK Premium tier |
@@ -1120,7 +1033,7 @@ For institutional pools (separate from permissionless pools):
 | Metric | Target |
 |---|---|
 | Proof Generation Time (mobile) | <30 seconds |
-| On-Chain Verification Gas | <300,000 gas |
+| On-Chain Verification Compute | <200,000 CU |
 | Smart Contract Audit Score | No critical issues |
 | Uptime | 99.9% |
 | Proof Size | <5KB |
@@ -1163,19 +1076,19 @@ For institutional pools (separate from permissionless pools):
 |---|---|
 | ZK Circuits | Circom 2.0 |
 | Proving System | Groth16 (snarkjs) |
-| Smart Contracts | Solidity 0.8.x |
-| Primary Chain | Polygon zkEVM |
-| Secondary Chain | Arbitrum One |
-| Oracle | Chainlink + Pyth |
+| Smart Contracts | Anchor (Rust) 0.30.x |
+| Primary Chain | Solana Mainnet |
+| Secondary Chain | Eclipse (Solana L2) |
+| Oracle | Pyth + Switchboard |
 | Data Attestation | zkTLS (Reclaim Protocol) |
 | Account Aggregator | Sahamati AA Framework |
 | Client App | React Native + TypeScript |
 | Browser Extension | Chrome Extension (React) |
 | Backend | Node.js + PostgreSQL (analytics only) |
-| Indexing | The Graph Protocol |
-| Cross-chain | LayerZero v2 |
-| Gas Abstraction | Gelato Network (meta-transactions) |
-| Insurance | Nexus Mutual integration |
+| Indexing | Solana DAS API + Helius |
+| Cross-chain | Wormhole |
+| Gas Subsidies | ZKC staking program |
+| Insurance | Solace / Neptune Mutual |
 
 ---
 

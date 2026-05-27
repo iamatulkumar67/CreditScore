@@ -25,10 +25,10 @@ const ANALYTICS_DATA = {
   ],
   topAssets: [
     { asset: "USDC", tvl: 45_000_000, borrowVolume: 35_000_000, utilization: 77.8 },
-    { asset: "ETH", tvl: 25_000_000, borrowVolume: 15_000_000, utilization: 60.0 },
+    { asset: "SOL", tvl: 25_000_000, borrowVolume: 15_000_000, utilization: 60.0 },
     { asset: "USDT", tvl: 15_000_000, borrowVolume: 12_000_000, utilization: 80.0 },
-    { asset: "WBTC", tvl: 10_000_000, borrowVolume: 8_000_000, utilization: 80.0 },
-    { asset: "DAI", tvl: 5_000_000, borrowVolume: 5_000_000, utilization: 100.0 },
+    { asset: "mSOL", tvl: 10_000_000, borrowVolume: 8_000_000, utilization: 80.0 },
+    { asset: "jitoSOL", tvl: 5_000_000, borrowVolume: 5_000_000, utilization: 100.0 },
   ],
   interestRateModel: {
     baseRate: 0.02,
