@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,7 +17,9 @@ import {
   TrendingUp,
   Activity,
   UserCheck,
+  LogOut,
 } from "lucide-react";
+import { SolanaWalletProvider } from "@/components/providers/wallet-provider";
 
 const POOLS = [
   { name: "USDC Lending Pool", tvl: "$12.4M", apy: "6.8%", utilization: "72%", color: "text-blue-400" },
@@ -32,8 +35,13 @@ const QUICK_STATS = [
   { label: "ZKC Staked", value: "142.5M", icon: Coins, change: "+5.1%" },
 ];
 
-export default function AppDashboard() {
-  const [connected, setConnected] = useState(false);
+function shortAddress(address: string) {
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+}
+
+function Dashboard() {
+  const { publicKey, connected, disconnect, connecting } = useWallet();
+  const { setVisible } = useWalletModal();
 
   return (
     <div className="min-h-screen bg-[#060b09]">
@@ -63,18 +71,34 @@ export default function AppDashboard() {
                 <Zap className="h-4 w-4 mr-1" />
                 Devnet
               </Button>
-              <Button
-                onClick={() => setConnected(!connected)}
-                className={
-                  connected
-                    ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-white"
-                }
-                variant={connected ? "ghost" : "default"}
-              >
-                <Wallet className="h-4 w-4 mr-1" />
-                {connected ? "0x7F3e...9aB2" : "Connect Wallet"}
-              </Button>
+              {connected ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30"
+                  >
+                    <Wallet className="h-4 w-4 mr-1" />
+                    {shortAddress(publicKey!.toBase58())}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={disconnect}
+                    className="text-emerald-100/50 hover:text-red-400 hover:bg-red-500/10"
+                    title="Disconnect"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setVisible(true)}
+                  disabled={connecting}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                >
+                  <Wallet className="h-4 w-4 mr-1" />
+                  {connecting ? "Connecting..." : "Connect Wallet"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -196,10 +220,10 @@ export default function AppDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { label: "Total Deposits", value: "$0.00" },
-                    { label: "Total Borrowed", value: "$0.00" },
-                    { label: "Available to Borrow", value: "$0.00" },
-                    { label: "Health Factor", value: "—" },
+                    { label: "Total Deposits", value: connected ? "$0.00" : "—" },
+                    { label: "Total Borrowed", value: connected ? "$0.00" : "—" },
+                    { label: "Available to Borrow", value: connected ? "$0.00" : "—" },
+                    { label: "Health Factor", value: connected ? "—" : "—" },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -216,7 +240,40 @@ export default function AppDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Connected Wallet Info */}
+        {connected && publicKey && (
+          <Card className="border-emerald-500/10">
+            <CardHeader>
+              <CardTitle className="text-white text-sm flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-emerald-400" />
+                Connected Wallet
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">{shortAddress(publicKey.toBase58())}</p>
+                  <p className="text-xs text-emerald-100/40">
+                    Connected via Phantom on Devnet
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
+  );
+}
+
+export default function AppPage() {
+  return (
+    <SolanaWalletProvider>
+      <Dashboard />
+    </SolanaWalletProvider>
   );
 }
