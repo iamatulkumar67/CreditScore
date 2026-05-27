@@ -148,20 +148,20 @@ FATF, GDPR, India DPDP Act ke saath compliant design. Regulators bhi satisfy, us
 
 ## 5. User Personas
 
-### Persona 1: Rahul — The Crypto-Native Professional
-- **Background:** 28 years old, software engineer, Mumbai. Monthly income ₹1.5L. Has crypto portfolio worth $8,000. Has CIBIL score 750.
+### Persona 1: Alex — The Crypto-Native Professional
+- **Background:** 28 years old, software engineer, New York. Monthly income $5,000. Has crypto portfolio worth $8,000. Has credit score 750.
 - **Problem:** Needs $3,000 short-term loan for laptop + equipment. DeFi pe $4,500 collateral lock karna padega. TradFi bank mein process slow hai.
 - **Goal:** Under-collateralized DeFi loan using income proof.
 - **ZKCreditScore Use:** Income ZK proof generate karta hai DigiLocker se. 60% LTV pe $3,000 USDC borrow karta hai sirf $1,800 collateral pe.
 
-### Persona 2: Priya — The Small Business Owner
-- **Background:** 34 years old, boutique owner, Bengaluru. Business generating ₹5L monthly revenue. GST returns available. Needs working capital.
+### Persona 2: Maria — The Small Business Owner
+- **Background:** 34 years old, boutique owner, London. Business generating $15,000 monthly revenue. Tax returns available. Needs working capital.
 - **Problem:** Banks se collateral-heavy loan milta hai, process slow. DeFi protocols overcollateralized hain.
 - **Goal:** Working capital loan against business revenue proof.
 - **ZKCreditScore Use:** Business revenue ZK proof generate karti hai. Credit line milti hai monthly revenue ke 2x.
 
-### Persona 3: Vikram — The DeFi Power User  
-- **Background:** 26 years old, crypto trader, Delhi. Strong on-chain history. No traditional credit history (never took bank loan).
+### Persona 3: Carlos — The DeFi Power User  
+- **Background:** 26 years old, crypto trader, São Paulo. Strong on-chain history. No traditional credit history (never took bank loan).
 - **Problem:** On-chain credit score protocols sirf wallet activity dekhte hain. Gameable hai.
 - **Goal:** Composite score from on-chain + off-chain data combined.
 - **ZKCreditScore Use:** On-chain activity + Coinbase verification + exchange KYC data combine karke ZK proof banata hai.
@@ -943,7 +943,7 @@ ZKCreditScore deliberately designed to be regulation-compatible:
 - Enterprise integration SDK supports Travel Rule compliance for exchanges
 
 **India RBI:**
-- Protocol does not accept INR deposits — pure crypto lending
+- Protocol does not accept fiat deposits — pure crypto lending
 - Not classified as NBFC (no fiat intermediation)
 - Account Aggregator integration follows RBI AA framework
 

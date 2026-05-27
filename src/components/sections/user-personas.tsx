@@ -9,9 +9,9 @@ import {
 
 const PERSONAS = [
   {
-    name: "Rahul",
+    name: "Alex",
     role: "Crypto-Native Professional",
-    age: "28, Mumbai",
+    age: "28, New York",
     icon: UserCheck,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
@@ -23,9 +23,9 @@ const PERSONAS = [
     statLabel: "Collateral needed",
   },
   {
-    name: "Priya",
+    name: "Maria",
     role: "Small Business Owner",
-    age: "34, Bengaluru",
+    age: "34, London",
     icon: Briefcase,
     color: "text-teal-400",
     bg: "bg-teal-500/10",
@@ -33,13 +33,13 @@ const PERSONAS = [
     problem: "Banks demand heavy collateral, slow process. DeFi is overcollateralized.",
     solution: "Business revenue ZK proof via GST returns. Gets credit line at 2x monthly revenue.",
     saving: "Working capital access",
-    stat: "₹10L",
+    stat: "$12,000",
     statLabel: "Credit line",
   },
   {
-    name: "Vikram",
+    name: "Carlos",
     role: "DeFi Power User",
-    age: "26, Delhi",
+    age: "26, São Paulo",
     icon: BarChart3,
     color: "text-cyan-400",
     bg: "bg-cyan-500/10",
