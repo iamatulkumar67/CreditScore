@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Shield,
@@ -79,8 +80,8 @@ export default function Navbar() {
             >
               Documentation
             </Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-600/25">
-              Launch App
+            <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-600/25">
+              <Link href="/app">Launch App</Link>
             </Button>
           </div>
 
@@ -113,8 +114,8 @@ export default function Navbar() {
               <Button variant="ghost" className="w-full text-emerald-300 justify-start">
                 Documentation
               </Button>
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0">
-                Launch App
+              <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0">
+                <Link href="/app">Launch App</Link>
               </Button>
             </div>
           </div>

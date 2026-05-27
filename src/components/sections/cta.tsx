@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Code2, BookOpen } from "lucide-react";
 
@@ -33,12 +34,14 @@ export default function CTA() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-          <Button
+          <Button asChild
             size="lg"
             className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-xl shadow-emerald-600/25 text-base px-8 h-14"
           >
-            Launch App
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <Link href="/app">
+              Launch App
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
           <Button
             size="lg"
