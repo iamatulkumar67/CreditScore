@@ -16,7 +16,7 @@ const FOOTER_LINKS = [
     title: "Developers",
     links: [
       { label: "Documentation", href: "#" },
-      { label: "Integration SDK", href: "#" },
+      { label: "Integration SDK", href: "https://github.com/iamatulkumar67/zkcreditscore-sdk" },
       { label: "Smart Contracts", href: "#" },
       { label: "ZK Circuits", href: "#" },
     ],
@@ -61,7 +61,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3">
               {[
-                { icon: Github, href: "#", label: "GitHub" },
+                { icon: Github, href: "https://github.com/iamatulkumar67/zkcreditscore-sdk", label: "GitHub" },
                 { icon: Twitter, href: "#", label: "Twitter" },
                 { icon: Globe, href: "#", label: "Website" },
                 { icon: FileText, href: "#", label: "Docs" },
@@ -108,6 +108,15 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-4 text-xs text-emerald-100/30">
             <span>Built on Solana</span>
+            <span>•</span>
+            <a
+              href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-300 transition-colors"
+            >
+              SDK v0.1.0
+            </a>
             <span>•</span>
             <span>Audited by Trail of Bits & OpenZeppelin</span>
             <span>•</span>

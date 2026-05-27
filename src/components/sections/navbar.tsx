@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Shield,
+  Github,
   Menu,
   X,
 } from "lucide-react";
@@ -63,6 +64,15 @@ export default function Navbar() {
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-100/70 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-all"
+            >
+              <Github className="h-4 w-4" />
+              <span>SDK</span>
+            </a>
             <Button
               variant="ghost"
               className="text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/10"

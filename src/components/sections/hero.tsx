@@ -7,6 +7,7 @@ import {
   Shield,
   Lock,
   Zap,
+  Github,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -62,6 +63,20 @@ export default function Hero() {
               >
                 Read Whitepaper
               </Button>
+              <a
+                href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-base px-8 h-12"
+                >
+                  <Github className="mr-2 h-4 w-4" />
+                  SDK
+                </Button>
+              </a>
             </div>
 
             {/* Trust Indicators */}

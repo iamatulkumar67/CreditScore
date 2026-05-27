@@ -48,14 +48,20 @@ export default function CTA() {
             <BookOpen className="mr-2 h-5 w-5" />
             Read Docs
           </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-base px-8 h-14"
+          <a
+            href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <Code2 className="mr-2 h-5 w-5" />
-            Integration SDK
-          </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-base px-8 h-14"
+            >
+              <Code2 className="mr-2 h-5 w-5" />
+              Integration SDK
+            </Button>
+          </a>
         </div>
 
         {/* Trust Stats */}
