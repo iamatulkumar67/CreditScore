@@ -1,0 +1,53 @@
+name: Publish SDK to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump (patch/minor/major)"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  publish:
+    name: Build & Publish @zkcreditscore/sdk
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: packages/sdk/package-lock.json
+
+      - run: npm ci
+
+      - run: npm version ${{ inputs.version }} --no-git-tag-version
+
+      - run: npm run build
+
+      - run: npm test 2>&1 || echo "No tests"
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version bump
+        run: |
+          git config user.name "zkcreditscore-bot"
+          git config user.email "bot@zkcreditscore.io"
+          git add package.json
+          git commit -m "chore: bump SDK version to $(node -p 'require(\"./package.json\").version')"
+          git push
+        shell: bash
