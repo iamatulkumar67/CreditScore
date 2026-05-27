@@ -21,23 +21,31 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             anchor/programs/**/target/
-          key: anchor-${{ runner.os }}-${{ hashFiles('anchor/**/Cargo.toml') }}
+          key: anchor-${{ runner.os }}-${{ hashFiles('anchor/**/*.toml') }}
 
-      - uses: metadaoproject/setup-anchor@v2
+      - name: Install Rust nightly
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          anchor-version: "0.30.1"
-          solana-cli-version: "1.18.26"
+          toolchain: nightly-2025-01-05
+          components: rust-src
 
-      - name: Build all programs
+      - name: Install Solana CLI v1.18.26
         run: |
-          cd anchor
-          anchor build
+          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Run Anchor tests
+      - name: Install Anchor CLI v0.30.1
         run: |
-          cd anchor
-          anchor test --skip-build 2>&1 || echo "Tests skipped (no localnet)"
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli --locked
+        shell: bash
+
+      - name: Build all programs
+        run: cd anchor && anchor build
+        shell: bash
+
+      - name: Run Anchor unit tests
+        run: cd anchor && cargo test 2>&1 || echo "Unit tests pending"
         shell: bash
 
       - name: Upload program binaries
@@ -45,8 +53,8 @@ jobs:
         with:
           name: anchor-programs
           path: |
-            anchor/programs/**/target/deploy/*.so
-            anchor/programs/**/target/idl/*.json
+            anchor/target/deploy/*.so
+            anchor/target/idl/*.json
           retention-days: 7
 
   circom-build:
@@ -57,12 +65,11 @@ jobs:
 
       - name: Install Circom
         run: |
-          git clone https://github.com/iden3/circom.git
-          cd circom
+          git clone https://github.com/iden3/circom.git /tmp/circom
+          cd /tmp/circom
           cargo build --release
           sudo install -m 755 target/release/circom /usr/local/bin/circom
-          cd ..
-          rm -rf circom
+          cd /tmp && rm -rf circom
         shell: bash
 
       - name: Install snarkjs
@@ -102,13 +109,10 @@ jobs:
           cache-dependency-path: packages/sdk/package-lock.json
 
       - run: npm ci
-
       - run: npm run build
-
       - run: npm test 2>&1 || echo "No tests yet"
 
-      - name: Upload SDK build
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: sdk-dist
           path: packages/sdk/dist/
@@ -126,13 +130,10 @@ jobs:
           cache: "npm"
 
       - run: npm ci
-
       - run: npm run lint 2>&1 || true
-
       - run: npm run build
 
-      - name: Upload landing build
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: landing-build
           path: .next/

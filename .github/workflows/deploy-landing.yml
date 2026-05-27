@@ -7,7 +7,8 @@ on:
       - "src/**"
       - "public/**"
       - "package.json"
-      - "next.config.ts"
+      - "next.config.*"
+      - "package-lock.json"
 
 jobs:
   deploy:
@@ -21,13 +22,10 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
       - name: Deploy to Vercel
-        run: |
-          vercel deploy \
-            --prod \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes
-        shell: bash
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"

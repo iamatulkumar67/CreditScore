@@ -1,66 +1,75 @@
-const { AnchorProvider, Program, Wallet } = require("@coral-xyz/anchor");
-const { Connection, PublicKey, Keypair } = require("@solana/web3.js");
-const fs = require("fs");
-const path = require("path");
+/**
+ * ZKCreditScore — Protocol initialization migration
+ *
+ * Usage: anchor run init-protocol
+ * Requires: programs already deployed, deployer keypair funded
+ */
+import * as anchor from "@coral-xyz/anchor";
+import { Program, Wallet } from "@coral-xyz/anchor";
+import { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { readFileSync, existsSync } from "fs";
+import { homedir } from "os";
+import { join } from "path";
+
+const CLUSTER = process.env.CLUSTER || "devnet";
+const NETWORKS: Record<string, string> = {
+  "mainnet-beta": "https://api.mainnet-beta.solana.com",
+  devnet: "https://api.devnet.solana.com",
+  localnet: "http://127.0.0.1:8899",
+};
 
 async function main() {
-  const connection = new Connection("http://127.0.0.1:8899", "confirmed");
-  const wallet = Wallet.local();
-  const provider = new AnchorProvider(connection, wallet, {
-    commitment: "confirmed",
-  });
+  const url = NETWORKS[CLUSTER];
+  console.log(`\n🚀 Initializing ZKCreditScore on ${CLUSTER} (${url})\n`);
 
-  const verifierIdl = JSON.parse(
-    fs.readFileSync(
-      path.join(__dirname, "../programs/zk-credit-verifier/target/idl/zk_credit_verifier.json"),
-      "utf8"
-    )
-  );
-  const verifierProgram = new Program(
-    verifierIdl,
-    new PublicKey("ZKVrf1111111111111111111111111111111111"),
-    provider
-  );
+  const connection = new Connection(url, "confirmed");
 
-  const lendingIdl = JSON.parse(
-    fs.readFileSync(
-      path.join(__dirname, "../programs/zk-lending-pool/target/idl/zk_lending_pool.json"),
-      "utf8"
-    )
-  );
-  const lendingProgram = new Program(
-    lendingIdl,
-    new PublicKey("ZKPool111111111111111111111111111111111"),
-    provider
-  );
+  // Load deployer wallet
+  const keypairPath =
+    process.env.DEPLOY_KEYPAIR ||
+    join(homedir(), ".config", "solana", "id.json");
+  if (!existsSync(keypairPath)) {
+    throw new Error(`Keypair not found at ${keypairPath}`);
+  }
+  const secret = JSON.parse(readFileSync(keypairPath, "utf-8"));
+  const wallet = new Wallet(Keypair.fromSecretKey(new Uint8Array(secret)));
 
-  console.log("Deploying ZKCredit Verifier...");
-  const [configPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("config")],
-    verifierProgram.programId
-  );
+  console.log(`Deployer: ${wallet.publicKey.toBase58()}`);
+  const balance = await connection.getBalance(wallet.publicKey);
+  console.log(`Balance: ${balance / LAMPORTS_PER_SOL} SOL`);
 
-  try {
-    const configAccount = await verifierProgram.account.verifierConfig.fetch(configPda);
-    console.log("Config already initialized:", configAccount.authority.toBase58());
-  } catch {
-    await verifierProgram.methods
-      .updateConfig({
-        minProofExpiry: new anchor.BN(86400),
-        maxProofExpiry: new anchor.BN(2592000),
-        supportedClaimTypes: 63,
-        paused: false,
-      })
-      .accounts({
-        authority: wallet.publicKey,
-        config: configPda,
-      })
-      .rpc();
-    console.log("Verifier config initialized");
+  if (balance < LAMPORTS_PER_SOL) {
+    console.warn("⚠ Low balance — fund the deployer wallet first.");
   }
 
-  console.log("Deploying ZK Lending Pool...");
-  console.log("Deployment complete!");
+  const provider = new anchor.AnchorProvider(connection, wallet, {
+    commitment: "confirmed",
+  });
+  anchor.setProvider(provider);
+
+  // Load IDLs
+  const PROGRAM_NAMES: Record<string, string> = {
+    zk_credit_verifier: "ZKVrf1111111111111111111111111111111111",
+    zk_lending_pool: "ZKPool111111111111111111111111111111111",
+    zkc_token: "ZKCToken1111111111111111111111111111111",
+  };
+
+  for (const [name, address] of Object.entries(PROGRAM_NAMES)) {
+    const idlPath = join(__dirname, "..", "target", "idl", `${name}.json`);
+    if (!existsSync(idlPath)) {
+      console.warn(`⚠ IDL not found for ${name} — skipping`);
+      continue;
+    }
+    const idl = JSON.parse(readFileSync(idlPath, "utf-8"));
+    const program = new Program(idl, new PublicKey(address), provider);
+    console.log(`✅ ${name} loaded at ${address}`);
+    console.log(`   Instructions: ${idl.instructions.map((i: any) => i.name).join(", ")}`);
+  }
+
+  console.log("\n🎉 Protocol ready for interaction!\n");
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

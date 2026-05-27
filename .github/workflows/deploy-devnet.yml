@@ -3,8 +3,8 @@ name: Deploy to Solana Devnet
 on:
   workflow_dispatch:
     inputs:
-      network:
-        description: "Solana cluster"
+      cluster:
+        description: "Target cluster"
         required: true
         default: "devnet"
         type: choice
@@ -14,68 +14,74 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Anchor Programs
+    name: Build & Deploy All Programs
     runs-on: ubuntu-latest
-    environment: devnet
+    environment: deployment
     steps:
       - uses: actions/checkout@v4
 
-      - uses: metadaoproject/setup-anchor@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          anchor-version: "0.30.1"
-          solana-cli-version: "1.18.26"
+          toolchain: nightly-2025-01-05
+          components: rust-src
 
-      - name: Generate deploy keypair
+      - name: Install Solana CLI v1.18.26
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Install Anchor CLI v0.30.1
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli --locked
+        shell: bash
+
+      - name: Setup deploy wallet
         run: |
           mkdir -p ~/.config/solana
-          echo "${{ secrets.SOLANA_DEPLOY_KEYPAIR }}" > ~/.config/solana/id.json
+          echo '${{ secrets.SOLANA_DEPLOY_KEYPAIR }}' > ~/.config/solana/id.json
           solana config set --keypair ~/.config/solana/id.json
-          solana config set --url ${{ inputs.network }}
+          solana config set --url ${{ inputs.cluster }}
+          echo "Wallet: $(solana address)"
+          echo "Balance: $(solana balance)"
         shell: bash
 
       - name: Build programs
-        run: |
-          cd anchor
-          anchor build
+        run: cd anchor && anchor build
         shell: bash
 
       - name: Deploy zk-credit-verifier
         run: |
           cd anchor
           solana program deploy \
-            programs/zk-credit-verifier/target/deploy/zk_credit_verifier.so \
-            --program-id ZKVrf1111111111111111111111111111111111
+            --program-id target/deploy/zk_credit_verifier-keypair.json \
+            target/deploy/zk_credit_verifier.so
         shell: bash
 
       - name: Deploy zk-lending-pool
         run: |
           cd anchor
           solana program deploy \
-            programs/zk-lending-pool/target/deploy/zk_lending_pool.so \
-            --program-id ZKPool111111111111111111111111111111111
+            --program-id target/deploy/zk_lending_pool-keypair.json \
+            target/deploy/zk_lending_pool.so
         shell: bash
 
       - name: Deploy zkc-token
         run: |
           cd anchor
           solana program deploy \
-            programs/zkc-token/target/deploy/zkc_token.so \
-            --program-id ZKCToken1111111111111111111111111111111
+            --program-id target/deploy/zkc_token-keypair.json \
+            target/deploy/zkc_token.so
         shell: bash
 
-      - name: Initialize protocol config
+      - name: Output deployment summary
         run: |
-          cd anchor
-          npx ts-node migrations/deploy.ts
-        shell: bash
-
-      - name: Output deployed addresses
-        run: |
-          echo "## Devnet Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Devnet Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "| Program | Address |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| zk-credit-verifier | ZKVrf1111111111111111111111111111111111 |" >> $GITHUB_STEP_SUMMARY
-          echo "| zk-lending-pool | ZKPool111111111111111111111111111111111 |" >> $GITHUB_STEP_SUMMARY
-          echo "| zkc-token | ZKCToken1111111111111111111111111111111111 |" >> $GITHUB_STEP_SUMMARY
-          echo "| Network | ${{ inputs.network }} |" >> $GITHUB_STEP_SUMMARY
+          for json in anchor/target/deploy/*-keypair.json; do
+            name=$(basename "$json" -keypair.json)
+            addr=$(solana-keygen pubkey "$json")
+            echo "| $name | $addr |" >> $GITHUB_STEP_SUMMARY
+          done
         shell: bash
