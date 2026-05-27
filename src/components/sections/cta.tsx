@@ -18,10 +18,10 @@ export default function CTA() {
 
         {/* Heading */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
-          DeFi mein pehli baar real credit milega
+          Real Credit, Finally in DeFi
           <br />
           <span className="gradient-text">
-            — bina privacy sacrifice kiye
+            — Without Sacrificing Privacy
           </span>
         </h2>
 
