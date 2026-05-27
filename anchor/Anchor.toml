@@ -1,0 +1,15 @@
+[toolchain]
+anchor_version = "0.30.1"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.localnet]
+zk_credit_verifier = "ZKVrf1111111111111111111111111111111111"
+zk_lending_pool = "ZKPool111111111111111111111111111111111"
+
+[scripts]
+test = "cargo test"
+build = "cargo build-bpf"
+deploy = "cargo build-bpf && solana program deploy"

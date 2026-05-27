@@ -1,0 +1,21 @@
+{
+  "name": "zkcreditscore-circuits",
+  "version": "0.1.0",
+  "description": "ZKCreditScore Circom 2.0 circuits for Solana",
+  "scripts": {
+    "compile:credit": "circom credit_score_above.circom --wasm --r1cs --sym -o build/credit_score",
+    "compile:income": "circom income_above.circom --wasm --r1cs --sym -o build/income",
+    "compile:dti": "circom dti_below.circom --wasm --r1cs --sym -o build/dti",
+    "compile:default": "circom no_default.circom --wasm --r1cs --sym -o build/default",
+    "compile:composite": "circom composite_credit_score.circom --wasm --r1cs --sym -o build/composite",
+    "compile:all": "npm run compile:credit && npm run compile:income && npm run compile:dti && npm run compile:default && npm run compile:composite",
+    "setup:powersOfTau": "snarkjs powersoftau new bn128 14 pot14_0000.ptau -v",
+    "setup:phase1": "snarkjs powersoftau contribute pot14_0000.ptau pot14_0001.ptau --name=\"First contribution\" -v",
+    "setup:verify": "snarkjs powersoftau verify pot14_0001.ptau",
+    "build": "npm run compile:all"
+  },
+  "devDependencies": {
+    "snarkjs": "^0.7.0",
+    "circom_tester": "^0.0.19"
+  }
+}

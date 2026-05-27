@@ -1,0 +1,23 @@
+[package]
+name = "zk-credit-verifier"
+version = "0.1.0"
+description = "ZKCreditScore Verifier — Groth16 proof verification and credential issuance"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"
+solana-program = "1.18.0"
+groth16-solana = { git = "https://github.com/iamatulkumar67/groth16-solana" }
+ark-bn254 = "0.4.0"
+ark-serialize = "0.4.0"
+thiserror-no-std = "2.0.0"

@@ -1,0 +1,14 @@
+{
+  "name": "zkcreditscore-anchor",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "anchor build",
+    "deploy": "anchor deploy",
+    "test": "anchor test",
+    "localnet": "solana-test-validator --bpf-program ZKVrf1111111111111111111111111111111111 programs/zk-credit-verifier/target/deploy/zk_credit_verifier.so --bpf-program ZKPool111111111111111111111111111111111 programs/zk-lending-pool/target/deploy/zk_lending_pool.so"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^30.0.0",
+    "@solana/web3.js": "^2.0.0"
+  }
+}
