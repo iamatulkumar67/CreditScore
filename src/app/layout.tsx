@@ -28,7 +28,8 @@ export const metadata: Metadata = {
     "Under-collateralized",
   ],
   icons: {
-    icon: "/logo.svg",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
   },
 };
 
