@@ -47,12 +47,15 @@ async function main() {
   });
   anchor.setProvider(provider);
 
-  // Load IDLs
+  // Load IDLs with real deployed program IDs
   const PROGRAM_NAMES: Record<string, string> = {
-    zk_credit_verifier: "ZKVrf1111111111111111111111111111111111",
-    zk_lending_pool: "ZKPool111111111111111111111111111111111",
-    zkc_token: "ZKCToken1111111111111111111111111111111",
+    zk_credit_verifier: "9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh",
+    zk_lending_pool: "HbHw6ib3eCfxbV1tv7X817VZ9J9tR4ZLGpNEQJ2jYDQo",
+    zkc_token: "4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump",
+    zk_governance: "4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT",
   };
+
+  const programs: Program[] = [];
 
   for (const [name, address] of Object.entries(PROGRAM_NAMES)) {
     const idlPath = join(__dirname, "..", "target", "idl", `${name}.json`);
@@ -62,6 +65,7 @@ async function main() {
     }
     const idl = JSON.parse(readFileSync(idlPath, "utf-8"));
     const program = new Program(idl, new PublicKey(address), provider);
+    programs.push(program);
     console.log(`✅ ${name} loaded at ${address}`);
     console.log(`   Instructions: ${idl.instructions.map((i: any) => i.name).join(", ")}`);
   }

@@ -4,11 +4,14 @@
   "scripts": {
     "build": "anchor build",
     "deploy": "anchor deploy",
-    "test": "anchor test",
-    "localnet": "solana-test-validator --bpf-program ZKVrf1111111111111111111111111111111111 programs/zk-credit-verifier/target/deploy/zk_credit_verifier.so --bpf-program ZKPool111111111111111111111111111111111 programs/zk-lending-pool/target/deploy/zk_lending_pool.so"
+    "test": "anchor test --skip-local-validator",
+    "localnet": "solana-test-validator"
   },
   "devDependencies": {
-    "@coral-xyz/anchor": "^30.0.0",
-    "@solana/web3.js": "^2.0.0"
+    "@coral-xyz/anchor": "^0.30.0",
+    "@solana/web3.js": "^1.98.0",
+    "@solana/spl-token": "^0.4.0",
+    "chai": "^4.3.0",
+    "ts-node": "^10.9.0"
   }
 }

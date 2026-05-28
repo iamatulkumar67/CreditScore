@@ -53,3 +53,6 @@ server.log
 # Skills directory
 /skills/
 .vercel
+
+# Anchor build artifacts
+anchor/target/
