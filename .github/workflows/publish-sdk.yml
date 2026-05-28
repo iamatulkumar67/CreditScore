@@ -47,7 +47,7 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           git config user.name "zkcreditscore-bot"
-          git config user.email "bot@zkscore.credit"
+          git config user.email "admin@zkscore.credit"
           git add package.json package-lock.json 2>/dev/null || git add package.json
           git commit -m "chore: bump SDK to v${VERSION}"
           git push
