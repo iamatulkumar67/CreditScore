@@ -126,6 +126,30 @@ export default function Roadmap() {
             );
           })}
         </div>
+
+        {/* Footer */}
+        <div className="mt-16 pt-8 border-t border-emerald-500/10 text-center">
+          <p className="text-sm text-emerald-100/40">
+            Follow our journey on{" "}
+            <a
+              href="https://x.com/ZkCreditScore"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              X @ZkCreditScore
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://zkscore.credit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              zkscore.credit
+            </a>
+          </p>
+        </div>
       </div>
     </section>
   );
