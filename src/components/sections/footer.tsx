@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Github, Twitter, Globe, FileText, Mail } from "lucide-react";
+import { Shield, Github, X, Globe, FileText, Mail } from "lucide-react";
 
 const FOOTER_LINKS = [
   {
@@ -26,7 +26,7 @@ const FOOTER_LINKS = [
     links: [
       { label: "Governance Forum", href: "#" },
       { label: "Discord", href: "#" },
-      { label: "Twitter", href: "#" },
+      { label: "X", href: "https://x.com/ZkCreditScore" },
       { label: "Blog", href: "#" },
     ],
   },
@@ -62,7 +62,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               {[
                 { icon: Github, href: "https://github.com/iamatulkumar67/zkcreditscore-sdk", label: "GitHub" },
-                { icon: Twitter, href: "#", label: "Twitter" },
+                { icon: X, href: "https://x.com/ZkCreditScore", label: "X" },
                 { icon: Globe, href: "#", label: "Website" },
                 { icon: FileText, href: "#", label: "Docs" },
                 { icon: Mail, href: "#", label: "Email" },
