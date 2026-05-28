@@ -31,13 +31,14 @@ BALANCE=$(solana balance | awk '{print $1}')
 log "Deployer: $DEPLOYER"
 log "Balance: $BALANCE SOL"
 
-if (( $(echo "$BALANCE < 5" | bc -l) )); then
-  NEED=$(( 5 - $(echo "$BALANCE" | cut -d. -f1) ))
-  warn "Low balance — airdropping..."
+BALANCE_INT=$(echo "$BALANCE" | cut -d. -f1)
+if [ "$BALANCE_INT" -lt 5 ] 2>/dev/null; then
+  NEED=$(( 5 - BALANCE_INT ))
+  warn "Low balance — airdropping $NEED SOL..."
   for i in $(seq 1 $NEED); do
-    solana airdrop 2 2>/dev/null || solana airdrop 1 2>/dev/null || true
-    sleep 2
-  fi
+    solana airdrop 1 2>/dev/null || true
+    sleep 3
+  done
   BALANCE=$(solana balance | awk '{print $1}')
   ok "New balance: $BALANCE SOL"
 fi
