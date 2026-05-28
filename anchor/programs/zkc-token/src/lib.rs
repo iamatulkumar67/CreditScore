@@ -33,7 +33,7 @@ pub mod zkc_token {
 
         let seeds = &[
             b"mint",
-            &[ctx.bumps.mint],
+            &[ctx.bumps.mint_authority],
         ];
         let signer_seeds = &[&seeds[..]];
 
@@ -124,8 +124,8 @@ pub mod zkc_token {
         let total_rewards = stake_account.pending_rewards + rewards;
 
         if total_rewards > 0 {
-            let seeds = &[b"mint", &[ctx.accounts.config.bump]];
-            let signer_seeds = &[&seeds[..]];
+            let mint_seeds = &[b"mint", &[ctx.bumps.mint_authority]];
+            let mint_signer = &[&mint_seeds[..]];
 
             anchor_spl::token_2022::mint_to(
                 CpiContext::new_with_signer(
@@ -135,11 +135,17 @@ pub mod zkc_token {
                         to: ctx.accounts.user_token_account.to_account_info(),
                         authority: ctx.accounts.mint_authority.to_account_info(),
                     },
-                    signer_seeds,
+                    mint_signer,
                 ),
                 total_rewards,
             )?;
         }
+
+        let vault_seeds = &[
+            b"staking-vault",
+            &[ctx.bumps.staking_vault_authority],
+        ];
+        let vault_signer = &[&vault_seeds[..]];
 
         anchor_spl::token_2022::transfer_checked(
             CpiContext::new_with_signer(
@@ -150,10 +156,7 @@ pub mod zkc_token {
                     authority: ctx.accounts.staking_vault_authority.to_account_info(),
                     mint: ctx.accounts.mint.to_account_info(),
                 },
-                &[&[
-                    b"staking-vault",
-                    &[ctx.accounts.staking_vault_bump],
-                ]],
+                vault_signer,
             ),
             amount,
             ctx.accounts.mint.decimals,
@@ -191,8 +194,8 @@ pub mod zkc_token {
 
         require!(total_claim > 0, TokenError::NoRewardsToClaim);
 
-        let seeds = &[b"mint", &[ctx.accounts.config.bump]];
-        let signer_seeds = &[&seeds[..]];
+        let claim_seeds = &[b"mint", &[ctx.bumps.mint_authority]];
+        let claim_signer = &[&claim_seeds[..]];
 
         anchor_spl::token_2022::mint_to(
             CpiContext::new_with_signer(
@@ -202,7 +205,7 @@ pub mod zkc_token {
                     to: ctx.accounts.user_token_account.to_account_info(),
                     authority: ctx.accounts.mint_authority.to_account_info(),
                 },
-                signer_seeds,
+                claim_signer,
             ),
             total_claim,
         )?;
@@ -414,12 +417,26 @@ pub struct UnstakeTokens<'info> {
 
     pub mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
 
+    /// CHECK: mint authority PDA, signs for reward minting
+    #[account(
+        seeds = [b"mint"],
+        bump,
+    )]
+    pub mint_authority: AccountInfo<'info>,
+
     #[account(
         mut,
         seeds = [b"staking-vault"],
         bump,
     )]
     pub staking_vault: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
+
+    /// CHECK: staking vault authority PDA, used as signer via CPI
+    #[account(
+        seeds = [b"staking-vault"],
+        bump,
+    )]
+    pub staking_vault_authority: AccountInfo<'info>,
 
     #[account(
         mut,
