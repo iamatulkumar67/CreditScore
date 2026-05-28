@@ -17,5 +17,5 @@ Go to: **Settings → Secrets and variables → Actions** → Add the following:
 2. Go to **Settings → Secrets** and add all secrets above
 3. Run **Deploy to Solana Devnet** workflow manually (Actions tab)
 4. After deploy, update `packages/sdk/src/constants/index.ts` with actual program IDs
-5. Run **Publish @zkcreditscore/sdk** workflow
+5. Run **Publish zkcreditscore-sdk** workflow
 6. Landing page auto-deploys on every `main` push

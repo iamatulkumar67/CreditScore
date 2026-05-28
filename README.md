@@ -122,7 +122,7 @@ ZKCreditScore bridges off-chain credit data with on-chain DeFi using Zero-Knowle
 | **Wallet** | @solana/wallet-adapter (Phantom) |
 | **ZK Proofs** | Circom 2.1.0 + snarkjs (Groth16, BN128 curve) |
 | **Smart Contracts** | Rust (Anchor) |
-| **SDK** | TypeScript (ESM + CJS, published as `@zkcreditscore/sdk`) |
+| **SDK** | TypeScript (ESM + CJS, published as `zkcreditscore-sdk`) |
 | **Database** | SQLite via Prisma (dev) |
 | **CI/CD** | GitHub Actions, Vercel |
 | **Auth** | Solana wallet signatures (no traditional auth) |
@@ -214,10 +214,10 @@ All use **Groth16 proving system** on the **BN128 curve** (compatible with Solan
 
 ## 📦 SDK
 
-The `@zkcreditscore/sdk` package provides TypeScript bindings for protocol interaction:
+The `zkcreditscore-sdk` package provides TypeScript bindings for protocol interaction:
 
 ```typescript
-import { ZKProver, SolanaSDK, ZKCreditAPI } from '@zkcreditscore/sdk';
+import { ZKProver, SolanaSDK, ZKCreditAPI } from 'zkcreditscore-sdk';
 
 // Client-side ZK proof generation
 const prover = new ZKProver();
@@ -359,7 +359,7 @@ bun run db:migrate
 │   ├── no_default.circom
 │   └── composite_credit_score.circom
 ├── packages/
-│   └── sdk/                      # @zkcreditscore/sdk TypeScript package
+│   └── sdk/                      # zkcreditscore-sdk TypeScript package
 │       └── src/
 │           ├── prover/           # Client-side ZK proof generation
 │           ├── solana/           # Anchor program interaction
@@ -416,7 +416,7 @@ The project includes GitHub Actions workflows for automated deployment:
 - **CI** (`ci.yml`): Builds Anchor programs, compiles circuits, builds SDK, builds frontend
 - **Deploy Landing** (`deploy-landing.yml`): Auto-deploys to Vercel on push to `main` (src/ changes)
 - **Deploy Devnet** (`deploy-devnet.yml`): Manual workflow to deploy programs to Solana devnet/mainnet
-- **Publish SDK** (`publish-sdk.yml`): Manual workflow to publish `@zkcreditscore/sdk` to npm
+- **Publish SDK** (`publish-sdk.yml`): Manual workflow to publish `zkcreditscore-sdk` to npm
 
 ### Production Build
 
