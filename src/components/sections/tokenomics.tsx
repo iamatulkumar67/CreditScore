@@ -15,28 +15,28 @@ const TOKEN_UTILITIES = [
   {
     icon: TrendingUp,
     title: "Fee Discounts",
-    description: "10–30% protocol fee discount by staking ZKC",
+    description: "10–30% protocol fee discount by staking ZKCR",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
   },
   {
     icon: Users,
     title: "Governance",
-    description: "1 ZKC = 1 vote with quadratic voting for parameter changes",
+    description: "1 ZKCR = 1 vote with quadratic voting for parameter changes",
     color: "text-teal-400",
     bg: "bg-teal-500/10",
   },
   {
     icon: Coins,
     title: "Staking Rewards",
-    description: "40% of protocol revenue distributed to ZKC stakers",
+    description: "40% of protocol revenue distributed to ZKCR stakers",
     color: "text-cyan-400",
     bg: "bg-cyan-500/10",
   },
   {
     icon: Shield,
     title: "Credential Boost",
-    description: "Use ZKC as collateral for credit tier improvement",
+    description: "Use ZKCR as collateral for credit tier improvement",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
   },
@@ -46,7 +46,7 @@ const REVENUE_SOURCES = [
   { source: "Origination Fee", mechanism: "0.5% of loan amount", toProtocol: "100%" },
   { source: "Interest Spread", mechanism: "Borrow rate minus supply rate", toProtocol: "20%" },
   { source: "Liquidation Fee", mechanism: "1% of liquidated amount", toProtocol: "100%" },
-  { source: "Credential Issuance", mechanism: "$2 equivalent in ZKC per proof", toProtocol: "100%" },
+  { source: "Credential Issuance", mechanism: "$2 equivalent in ZKCR per proof", toProtocol: "100%" },
   { source: "Integration License", mechanism: "$500/month enterprise SDK", toProtocol: "100%" },
 ];
 
@@ -64,7 +64,7 @@ export default function Tokenomics() {
             Tokenomics
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            <span className="gradient-text">ZKC</span> Token
+            <span className="gradient-text">ZKCR</span> Token
           </h2>
           <p className="text-lg text-emerald-100/50 max-w-2xl mx-auto">
             SPL token on Solana. 1 billion total supply with carefully designed
@@ -138,9 +138,10 @@ export default function Tokenomics() {
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { label: "Token Name", value: "ZKCredit (ZKC)" },
+                    { label: "Token Name", value: "ZKCredit (ZKCR)" },
+                    { label: "Contract Address", value: "4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump" },
                     { label: "Standard", value: "SPL (Token 2022)" },
-                    { label: "Total Supply", value: "1,000,000,000 ZKC" },
+                    { label: "Total Supply", value: "1,000,000,000 ZKCR" },
                     { label: "Primary Chain", value: "Solana Mainnet" },
                     { label: "Bridged To", value: "Eclipse (Solana L2)" },
                   ].map((item) => (
@@ -168,7 +169,7 @@ export default function Tokenomics() {
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { label: "ZKC Stakers", value: "40%", color: "#10b981" },
+                    { label: "ZKCR Stakers", value: "40%", color: "#10b981" },
                     { label: "Insurance/Reserve Fund", value: "30%", color: "#14b8a6" },
                     { label: "Protocol Treasury", value: "20%", color: "#2dd4bf" },
                     { label: "Security Council", value: "10%", color: "#f59e0b" },

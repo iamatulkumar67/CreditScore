@@ -32,7 +32,7 @@ const QUICK_STATS = [
   { label: "Total Value Locked", value: "$38.2M", icon: BarChart3, change: "+12.4%" },
   { label: "Active Loans", value: "1,847", icon: Activity, change: "+8.2%" },
   { label: "Credentials Issued", value: "24,391", icon: UserCheck, change: "+23.7%" },
-  { label: "ZKC Staked", value: "142.5M", icon: Coins, change: "+5.1%" },
+  { label: "ZKCR Staked", value: "142.5M", icon: Coins, change: "+5.1%" },
 ];
 
 function shortAddress(address: string) {
@@ -192,7 +192,7 @@ function Dashboard() {
                 {[
                   { label: "Borrow", desc: "Get a loan against collateral", icon: Coins },
                   { label: "Supply", desc: "Earn interest on deposits", icon: TrendingUp },
-                  { label: "Stake ZKC", desc: "Stake tokens for rewards", icon: Zap },
+                  { label: "Stake ZKCR", desc: "Stake tokens for rewards", icon: Zap },
                   { label: "Verify Identity", desc: "Generate ZK credential", icon: Lock },
                 ].map((action) => (
                   <Button

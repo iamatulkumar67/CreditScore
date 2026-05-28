@@ -46,7 +46,7 @@ const LAYERS = [
       { name: "Lending Pool Engine", desc: "Deposit, borrow, liquidate", icon: Database },
       { name: "Credential Registry", desc: "SBT management & queries", icon: Link2 },
       { name: "Pyth / Switchboard", desc: "Solana-native price oracles", icon: Cloud },
-      { name: "Governance Module", desc: "ZKC token voting & proposals", icon: Server },
+      { name: "Governance Module", desc: "ZKCR token voting & proposals", icon: Server },
       { name: "Treasury / Insurance", desc: "Protocol reserves & safety fund", icon: Database },
     ],
   },

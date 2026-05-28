@@ -8,7 +8,7 @@ use anchor_spl::token_2022::{
 };
 use anchor_spl::associated_token::AssociatedToken;
 
-declare_id!("AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ");
+declare_id!("4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump");
 
 const MIN_STAKE_AMOUNT: u64 = 1_000_000_000_000;
 const STAKING_REWARD_RATE: u64 = 500;

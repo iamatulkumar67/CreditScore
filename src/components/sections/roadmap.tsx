@@ -66,7 +66,7 @@ export default function Roadmap() {
                       {phaseIndex === 0
                         ? "Budget: $1.2M — Team: 8 people"
                         : phaseIndex === 1
-                        ? "Budget: $2.8M + ZKC community sale revenue"
+                        ? "Budget: $2.8M + ZKCR community sale revenue"
                         : "Scaling to $500M TVL, 100+ integrations"}
                     </p>
                   </div>

@@ -145,7 +145,7 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
     timeline: "Months 7–12",
     milestones: [
       { id: "M7", title: "Mainnet Launch on Solana", description: "Permissionless mainnet", month: "Month 7" },
-      { id: "M8", title: "ZKC Token Launch + Governance", description: "Token + governance activation", month: "Month 8" },
+      { id: "M8", title: "ZKCR Token Launch + Governance", description: "Token + governance activation", month: "Month 8" },
       { id: "M9", title: "Multi-Collateral Support", description: "SOL, USDC, wBTC, mSOL", month: "Month 9" },
       { id: "M10", title: "Composite Credit Score", description: "Full tier system launch", month: "Month 10" },
       { id: "M11", title: "Integration SDK v1.0", description: "First 3 protocol integrations", month: "Month 11" },
