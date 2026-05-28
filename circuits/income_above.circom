@@ -1,7 +1,7 @@
 pragma circom 2.1.0;
 
-include "circomlib/poseidon.circom";
-include "circomlib/comparators.circom";
+include "poseidon.circom";
+include "comparators.circom";
 
 template IncomeAbove() {
     signal private input monthlyIncome;
@@ -18,37 +18,49 @@ template IncomeAbove() {
 
     signal output isValid;
 
-    component gte = GreaterEqThan(32);
+    component gte = GreaterEqThan(64);
     gte.in[0] <== monthlyIncome;
     gte.in[1] <== incomeThreshold;
 
-    signal avgIncome;
-    var DIVISOR = 3;
-    component div = SafeDiv(48);
-    div.numerator <== month1Income + month2Income + month3Income;
-    div.denominator <== DIVISOR;
-    avgIncome <== div.quotient;
+    signal sumIncome;
+    sumIncome <== month1Income + month2Income + month3Income;
 
-    component avgGte = GreaterEqThan(32);
-    avgGte.in[0] <== avgIncome;
-    avgGte.in[1] <== incomeThreshold;
+    component avgGte = GreaterEqThan(64);
+    avgGte.in[0] <== sumIncome;
+    avgGte.in[1] <== incomeThreshold * 3;
 
-    signal sourceValid <== incomeSource >= 0 && incomeSource <= 2;
+    component sourceLow = GreaterEqThan(64);
+    sourceLow.in[0] <== incomeSource;
+    sourceLow.in[1] <== 0;
 
-    component stabilityCheck = GreaterEqThan(32);
-    stabilityCheck.in[0] <== month1Income;
-    stabilityCheck.in[1] <== month2Income;
-    stabilityCheck.in[0] <== month2Income;
-    stabilityCheck.in[1] <== month3Income;
+    component sourceHigh = LessEqThan(64);
+    sourceHigh.in[0] <== incomeSource;
+    sourceHigh.in[1] <== 2;
+
+    signal sourceValid;
+    sourceValid <== sourceLow.out * sourceHigh.out;
+
+    component stable1 = GreaterEqThan(64);
+    stable1.in[0] <== month1Income;
+    stable1.in[1] <== month2Income;
+
+    component stable2 = GreaterEqThan(64);
+    stable2.in[0] <== month2Income;
+    stable2.in[1] <== month3Income;
+
+    signal incomeStable;
+    incomeStable <== stable1.out * stable2.out;
 
     component nullifierCheck = Poseidon(3);
     nullifierCheck.inputs[0] <== monthlyIncome;
     nullifierCheck.inputs[1] <== incomeSource;
     nullifierCheck.inputs[2] <== salt;
 
-    signal nullifierMatch <== nullifierCheck.out == nullifier;
+    component nullifierEq = IsEqual();
+    nullifierEq.in[0] <== nullifierCheck.out;
+    nullifierEq.in[1] <== nullifier;
 
-    isValid <== gte.out * avgGte.out * sourceValid * nullifierMatch;
+    isValid <== gte.out * avgGte.out * sourceValid * incomeStable * nullifierEq.out;
 }
 
 component main = IncomeAbove();

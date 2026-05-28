@@ -1,7 +1,7 @@
 pragma circom 2.1.0;
 
-include "circomlib/poseidon.circom";
-include "circomlib/comparators.circom";
+include "poseidon.circom";
+include "comparators.circom";
 
 template DebtToIncomeBelow() {
     signal private input totalMonthlyDebt;
@@ -15,26 +15,29 @@ template DebtToIncomeBelow() {
 
     signal output isValid;
 
-    signal dtiRatio;
-    component div = SafeDiv(48);
-    div.numerator <== totalMonthlyDebt * 100;
-    div.denominator <== totalMonthlyIncome;
-    dtiRatio <== div.quotient;
+    signal debtNum;
+    debtNum <== totalMonthlyDebt * 100;
 
-    component below = LessEqThan(16);
-    below.in[0] <== dtiRatio;
-    below.in[1] <== dtiThreshold;
+    component below = LessEqThan(64);
+    below.in[0] <== debtNum;
+    below.in[1] <== dtiThreshold * totalMonthlyIncome;
 
-    signal dtiValid <== dtiRatio >= 0 && dtiRatio <= 100;
+    signal maxDti;
+    component maxCheck = LessEqThan(64);
+    maxCheck.in[0] <== totalMonthlyDebt;
+    maxCheck.in[1] <== totalMonthlyIncome;
+    maxDti <== maxCheck.out;
 
     component nullifierCheck = Poseidon(3);
     nullifierCheck.inputs[0] <== totalMonthlyDebt;
     nullifierCheck.inputs[1] <== totalMonthlyIncome;
     nullifierCheck.inputs[2] <== salt;
 
-    signal nullifierMatch <== nullifierCheck.out == nullifier;
+    component nullifierEq = IsEqual();
+    nullifierEq.in[0] <== nullifierCheck.out;
+    nullifierEq.in[1] <== nullifier;
 
-    isValid <== below.out * dtiValid * nullifierMatch;
+    isValid <== below.out * maxDti * nullifierEq.out;
 }
 
 component main = DebtToIncomeBelow();

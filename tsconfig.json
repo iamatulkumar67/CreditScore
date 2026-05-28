@@ -26,6 +26,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "zkcreditscore-sdk": [
+        "./packages/sdk/src/index.ts"
+      ],
+      "zkcreditscore-sdk/*": [
+        "./packages/sdk/src/*"
       ]
     }
   },

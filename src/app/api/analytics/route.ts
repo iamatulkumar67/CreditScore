@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Historical analytics data — in production would query The Graph / on-chain indexer
-const ANALYTICS_DATA = {
+const MOCK_DATA = {
   tvlHistory: [
     { month: "2025-07", tvl: 5_000_000, loans: 2_000_000 },
     { month: "2025-08", tvl: 12_000_000, loans: 5_000_000 },
@@ -40,8 +39,18 @@ const ANALYTICS_DATA = {
 };
 
 export async function GET() {
+  try {
+    const res = await fetch("https://api.zkscore.credit/v1/analytics", {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json({ success: true, data });
+    }
+  } catch {}
+
   return NextResponse.json({
     success: true,
-    data: ANALYTICS_DATA,
+    data: MOCK_DATA,
   });
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Mock protocol statistics — in production these would come from on-chain data / The Graph
-const PROTOCOL_STATS = {
+const MOCK_STATS = {
   totalTVL: 100_000_000,
   totalCredentials: 100_432,
   activeLoans: 20_187,
@@ -19,8 +18,18 @@ const PROTOCOL_STATS = {
 };
 
 export async function GET() {
+  try {
+    const res = await fetch("https://api.zkscore.credit/v1/stats", {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json({ success: true, data });
+    }
+  } catch {}
+
   return NextResponse.json({
     success: true,
-    data: PROTOCOL_STATS,
+    data: MOCK_STATS,
   });
 }

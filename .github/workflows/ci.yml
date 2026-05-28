@@ -72,18 +72,21 @@ jobs:
           cd /tmp && rm -rf circom
         shell: bash
 
-      - name: Install snarkjs
-        run: npm install -g snarkjs
+      - name: Install circomlib + snarkjs
+        run: |
+          cd circuits
+          npm install
+        shell: bash
 
       - name: Compile all circuits
         run: |
           cd circuits
           mkdir -p build
-          circom credit_score_above.circom --wasm --r1cs --sym -o build/credit_score
-          circom income_above.circom --wasm --r1cs --sym -o build/income
-          circom dti_below.circom --wasm --r1cs --sym -o build/dti
-          circom no_default.circom --wasm --r1cs --sym -o build/default
-          circom composite_credit_score.circom --wasm --r1cs --sym -o build/composite
+          circom credit_score_above.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/credit_score
+          circom income_above.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/income
+          circom dti_below.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/dti
+          circom no_default.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/default
+          circom composite_credit_score.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/composite
         shell: bash
 
       - name: Upload circuit artifacts

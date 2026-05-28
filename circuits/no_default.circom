@@ -1,7 +1,7 @@
 pragma circom 2.1.0;
 
-include "circomlib/poseidon.circom";
-include "circomlib/comparators.circom";
+include "poseidon.circom";
+include "comparators.circom";
 
 template NoDefaultsHistory(years int) {
     signal private input totalDefaults;
@@ -15,20 +15,25 @@ template NoDefaultsHistory(years int) {
 
     signal output isValid;
 
-    signal noDefaults <== totalDefaults == 0;
+    component iz = IsZero();
+    iz.in <== totalDefaults;
 
     signal sufficientHistory;
-    var SECONDS_PER_YEAR = 365 * 86400;
-    sufficientHistory <== creditHistoryLength >= years * SECONDS_PER_YEAR;
+    component historyCheck = GreaterEqThan(64);
+    historyCheck.in[0] <== creditHistoryLength;
+    historyCheck.in[1] <== years * 365 * 86400;
+    sufficientHistory <== historyCheck.out;
 
     component nullifierCheck = Poseidon(3);
     nullifierCheck.inputs[0] <== totalDefaults;
     nullifierCheck.inputs[1] <== creditHistoryLength;
     nullifierCheck.inputs[2] <== salt;
 
-    signal nullifierMatch <== nullifierCheck.out == nullifier;
+    component nullifierEq = IsEqual();
+    nullifierEq.in[0] <== nullifierCheck.out;
+    nullifierEq.in[1] <== nullifier;
 
-    isValid <== noDefaults * sufficientHistory * nullifierMatch;
+    isValid <== iz.out * sufficientHistory * nullifierEq.out;
 }
 
 component main = NoDefaultsHistory(3);

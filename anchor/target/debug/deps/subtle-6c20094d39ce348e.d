@@ -1,0 +1,7 @@
+C:\Users\Atul Kumar\Desktop\Projects\Stage 1-Working\CreditScore\anchor\target\debug\deps\subtle-6c20094d39ce348e.d: C:\Users\Atul\ Kumar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\subtle-2.4.1\src\lib.rs
+
+C:\Users\Atul Kumar\Desktop\Projects\Stage 1-Working\CreditScore\anchor\target\debug\deps\libsubtle-6c20094d39ce348e.rlib: C:\Users\Atul\ Kumar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\subtle-2.4.1\src\lib.rs
+
+C:\Users\Atul Kumar\Desktop\Projects\Stage 1-Working\CreditScore\anchor\target\debug\deps\libsubtle-6c20094d39ce348e.rmeta: C:\Users\Atul\ Kumar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\subtle-2.4.1\src\lib.rs
+
+C:\Users\Atul\ Kumar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\subtle-2.4.1\src\lib.rs:
