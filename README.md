@@ -232,7 +232,7 @@ const solana = new SolanaSDK(provider);
 const credential = await solana.verifier.verifyAndIssue(proof);
 
 // Protocol data queries
-const api = new ZKCreditAPI('https://api.zkcreditscore.io');
+const api = new ZKCreditAPI('https://api.zkscore.credit');
 const stats = await api.getProtocolStats();
 ```
 
@@ -492,9 +492,9 @@ This project is licensed under the **MIT License**.
     Built with ❤️ for a privacy-preserving financial future on Solana
   </p>
   <p>
-    <a href="https://zkcreditscore.io">Website</a> •
-    <a href="https://docs.zkcreditscore.io">Docs</a> •
-    <a href="https://twitter.com/zkcreditscore">Twitter</a> •
+    <a href="https://zkscore.credit">Website</a> •
+    <a href="https://docs.zkscore.credit">Docs</a> •
+    <a href="https://x.com/zkcreditscore">X</a> •
     <a href="https://discord.gg/zkcreditscore">Discord</a>
   </p>
 </div>
