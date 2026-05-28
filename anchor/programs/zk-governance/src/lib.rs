@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token_interface::TokenAccount;
 
 declare_id!("4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT");
 
@@ -187,7 +188,7 @@ pub mod zk_governance {
             let instr_end = instr_start + MAX_INSTRUCTION_DATA;
             let data = proposal.instruction_data[instr_start..instr_end].to_vec();
 
-            let _ = solana_program::program::invoke_signed(
+            solana_program::program::invoke_signed(
                 &solana_program::instruction::Instruction {
                     program_id: target,
                     accounts: vec![],
@@ -195,7 +196,7 @@ pub mod zk_governance {
                 },
                 &[ctx.accounts.governance_pda.to_account_info()],
                 signer_seeds,
-            );
+            )?;
         }
 
         proposal.status = ProposalStatus::Executed as u8;
@@ -369,13 +370,10 @@ pub struct QueueProposal<'info> {
     )]
     pub proposal: Account<'info, Proposal>,
 
-    /// CHECK: staking vault ATA — balance used for quorum check
-    #[account(
-        mut,
-        seeds = [b"staking-vault"],
-        bump,
-    )]
-    pub staking_vault: UncheckedAccount<'info>,
+    /// Staking vault token account from zkc-token program — balance used for quorum check
+    /// PDA: seeds [b"staking-vault"] under zkc-token program ID
+    #[account()]
+    pub staking_vault: InterfaceAccount<'info, TokenAccount>,
 }
 
 #[derive(Accounts)]
