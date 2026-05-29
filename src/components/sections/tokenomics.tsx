@@ -8,8 +8,9 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { Coins, TrendingUp, Users, Shield } from "lucide-react";
+import { Coins, TrendingUp, Users, Shield, Copy } from "lucide-react";
 import { TOKEN_ALLOCATIONS } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const TOKEN_UTILITIES = [
   {
@@ -51,6 +52,17 @@ const REVENUE_SOURCES = [
 ];
 
 export default function Tokenomics() {
+  const { toast } = useToast();
+
+  async function copyAddress(address: string) {
+    try {
+      await navigator.clipboard.writeText(address);
+      toast({ title: "Copied to clipboard", duration: 2500 });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to copy", duration: 2500 });
+    }
+  }
+
   return (
     <section className="relative py-24 overflow-hidden" id="tokenomics">
       <div className="absolute inset-0 grid-pattern opacity-15" />
@@ -152,9 +164,27 @@ export default function Tokenomics() {
                       <span className="text-sm text-emerald-100/50">
                         {item.label}
                       </span>
-                      <span className="text-sm font-medium text-emerald-300">
-                        {item.value}
-                      </span>
+                      {item.label === "Contract Address" ? (
+                        <span
+                          onClick={() => copyAddress(item.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              copyAddress(item.value);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          className="text-sm font-medium text-emerald-300 cursor-pointer hover:text-emerald-200 hover:underline underline-offset-2 transition-all inline-flex items-center gap-1.5"
+                        >
+                          {item.value}
+                          <Copy className="h-3 w-3 shrink-0 opacity-60" />
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium text-emerald-300">
+                          {item.value}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
