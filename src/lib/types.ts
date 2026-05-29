@@ -49,12 +49,10 @@ export interface TokenAllocation {
 export interface RoadmapPhase {
   phase: string;
   title: string;
-  timeline: string;
   milestones: {
     id: string;
     title: string;
     description: string;
-    month: string;
   }[];
 }
 
@@ -129,40 +127,37 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
   {
     phase: "Phase 1",
     title: "Foundation",
-    timeline: "Months 1–6",
     milestones: [
-      { id: "M1", title: "ZK Circuit Design + Audit", description: "CreditScore + Income circuits", month: "Month 2" },
-      { id: "M2", title: "Smart Contracts v0.1 Testnet", description: "Verifier + SBT deployed", month: "Month 3" },
-      { id: "M3", title: "Client App MVP", description: "iOS + Chrome with AA integration", month: "Month 4" },
-      { id: "M4", title: "Lending Pool v0.1 Testnet", description: "USDC only, single collateral", month: "Month 4" },
-      { id: "M5", title: "Security Audit", description: "Trail of Bits + OpenZeppelin", month: "Month 5–6" },
-      { id: "M6", title: "Trusted Setup Ceremony", description: "Public, verifiable ceremony", month: "Month 6" },
+      { id: "M1", title: "ZK Circuit Design + Audit", description: "CreditScore + Income circuits" },
+      { id: "M2", title: "Smart Contracts v0.1 Testnet", description: "Verifier + SBT deployed" },
+      { id: "M3", title: "Client App MVP", description: "iOS + Chrome with AA integration" },
+      { id: "M4", title: "Lending Pool v0.1 Testnet", description: "USDC only, single collateral" },
+      { id: "M5", title: "Security Audit", description: "Trail of Bits + OpenZeppelin" },
+      { id: "M6", title: "Trusted Setup Ceremony", description: "Public, verifiable ceremony" },
     ],
   },
   {
     phase: "Phase 2",
     title: "Mainnet Launch",
-    timeline: "Months 7–12",
     milestones: [
-      { id: "M7", title: "Mainnet Launch on Solana", description: "Permissionless mainnet", month: "Month 7" },
-      { id: "M8", title: "ZKCR Token Launch + Governance", description: "Token + governance activation", month: "Month 8" },
-      { id: "M9", title: "Multi-Collateral Support", description: "SOL, USDC, wBTC, mSOL", month: "Month 9" },
-      { id: "M10", title: "Composite Credit Score", description: "Full tier system launch", month: "Month 10" },
-      { id: "M11", title: "Integration SDK v1.0", description: "First 3 protocol integrations", month: "Month 11" },
-      { id: "M12", title: "$50M TVL Target", description: "Liquidity mining program", month: "Month 12" },
+      { id: "M7", title: "Mainnet Launch on Solana", description: "Permissionless mainnet" },
+      { id: "M8", title: "ZKCR Token Launch + Governance", description: "Token + governance activation" },
+      { id: "M9", title: "Multi-Collateral Support", description: "SOL, USDC, wBTC, mSOL" },
+      { id: "M10", title: "Composite Credit Score", description: "Full tier system launch" },
+      { id: "M11", title: "Integration SDK v1.0", description: "First 3 protocol integrations" },
+      { id: "M12", title: "$50M TVL Target", description: "Liquidity mining program" },
     ],
   },
   {
     phase: "Phase 3",
     title: "Expansion",
-    timeline: "Months 13–24",
     milestones: [
-      { id: "M13", title: "Eclipse L2 Deployment", description: "Cross-chain credential portability", month: "Month 13" },
-      { id: "M14", title: "Plaid Integration", description: "US/EU market entry", month: "Month 14" },
-      { id: "M15", title: "B2B API Launch", description: "White-label for DeFi protocols", month: "Month 16" },
-      { id: "M16", title: "Under-collateralized Flash Loans", description: "ZK Premium tier feature", month: "Month 18" },
-      { id: "M17", title: "Mobile-First Markets", description: "India, Nigeria, Indonesia, Brazil", month: "Month 20" },
-      { id: "M18", title: "$500M TVL Target", description: "100+ protocol integrations", month: "Month 24" },
+      { id: "M13", title: "Eclipse L2 Deployment", description: "Cross-chain credential portability" },
+      { id: "M14", title: "Plaid Integration", description: "US/EU market entry" },
+      { id: "M15", title: "B2B API Launch", description: "White-label for DeFi protocols" },
+      { id: "M16", title: "Under-collateralized Flash Loans", description: "ZK Premium tier feature" },
+      { id: "M17", title: "Mobile-First Markets", description: "India, Nigeria, Indonesia, Brazil" },
+      { id: "M18", title: "$500M TVL Target", description: "100+ protocol integrations" },
     ],
   },
 ];

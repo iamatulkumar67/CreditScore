@@ -963,33 +963,29 @@ For institutional pools (separate from permissionless pools):
 
 ## 16. Roadmap & Milestones
 
-### Phase 1 — Foundation (Months 1–6)
+### Phase 1 — Foundation
 
-| Milestone | Deliverable | Timeline |
-|---|---|---|
-| M1 | ZK circuit design + audit (CreditScore + Income circuits) | Month 2 |
-| M2 | Smart contracts v0.1 (Verifier + SBT) testnet deploy | Month 3 |
-| M3 | Client app MVP (iOS + Chrome) with Account Aggregator integration | Month 4 |
-| M4 | Lending Pool v0.1 testnet (USDC only, single collateral type) | Month 4 |
-| M5 | Security audit — Trail of Bits (circuits) + Neodyme (Anchor contracts) | Month 5–6 |
-| M6 | Trusted setup ceremony (public, verifiable) | Month 6 |
+| Milestone | Deliverable |
+|---|---|
+| M1 | ZK circuit design + audit (CreditScore + Income circuits) |
+| M2 | Smart contracts v0.1 (Verifier + SBT) testnet deploy |
+| M3 | Client app MVP (iOS + Chrome) with Account Aggregator integration |
+| M4 | Lending Pool v0.1 testnet (USDC only, single collateral type) |
+| M5 | Security audit — Trail of Bits (circuits) + Neodyme (Anchor contracts) |
+| M6 | Trusted setup ceremony (public, verifiable) |
 
-**Phase 1 Budget:** $1.2M (team: 8 people — 3 ZK engineers, 2 smart contract, 2 frontend, 1 product)
+### Phase 2 — Mainnet Launch
 
-### Phase 2 — Mainnet Launch (Months 7–12)
+| Milestone | Deliverable |
+|---|---|
+| M7 | Mainnet launch on Solana — permissionless mainnet |
+| M8 | ZKC token launch + governance activation |
+| M9 | Multi-collateral support (SOL, mSOL, jitoSOL, USDC) |
+| M10 | Composite credit score circuit + tier system full launch |
+| M11 | Integration SDK v1.0 — first 3 protocol integrations |
+| M12 | $50M TVL target — liquidity mining program |
 
-| Milestone | Deliverable | Timeline |
-|---|---|---|
-| M7 | Mainnet launch on Solana — permissionless mainnet | Month 7 |
-| M8 | ZKC token launch + governance activation | Month 8 |
-| M9 | Multi-collateral support (SOL, mSOL, jitoSOL, USDC) | Month 9 |
-| M10 | Composite credit score circuit + tier system full launch | Month 10 |
-| M11 | Integration SDK v1.0 — first 3 protocol integrations | Month 11 |
-| M12 | $50M TVL target — liquidity mining program | Month 12 |
-
-**Phase 2 Budget:** $2.8M (+ ZKC community sale revenue)
-
-### Phase 3 — Expansion (Months 13–24)
+### Phase 3 — Expansion
 
 | Milestone | Deliverable |
 |---|---|

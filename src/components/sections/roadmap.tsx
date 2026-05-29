@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Rocket, Flag, Target, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { ROADMAP_PHASES } from "@/lib/types";
 
@@ -29,8 +28,8 @@ export default function Roadmap() {
             <span className="gradient-text">DeFi Credit</span>
           </h2>
           <p className="text-lg text-emerald-100/50 max-w-2xl mx-auto">
-            24-month roadmap from foundation to global expansion. Each phase
-            builds on the last to create a comprehensive credit infrastructure.
+            Milestone-driven development from foundation to global expansion.
+            Each phase builds on the last to create comprehensive credit infrastructure.
           </p>
         </div>
 
@@ -55,12 +54,6 @@ export default function Roadmap() {
                       <h3 className="text-xl font-bold text-white">
                         {phase.phase}: {phase.title}
                       </h3>
-                      <Badge
-                        variant="outline"
-                        className={`${phaseColor.border} ${phaseColor.text} text-xs`}
-                      >
-                        {phase.timeline}
-                      </Badge>
                     </div>
                     <p className="text-sm text-emerald-100/40">
                       {phaseIndex === 0
@@ -96,12 +89,9 @@ export default function Roadmap() {
                           )}
                         </div>
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="mb-1">
                             <span className="text-xs font-mono text-emerald-100/30">
                               {milestone.id}
-                            </span>
-                            <span className="text-xs text-emerald-100/30">
-                              {milestone.month}
                             </span>
                           </div>
                           <h4 className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors">
