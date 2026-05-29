@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "description": "ZKCreditScore Circom 2.0 circuits for Solana",
   "scripts": {
-    "compile:credit": "circom credit_score_above.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/credit_score",
-    "compile:income": "circom income_above.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/income",
-    "compile:dti": "circom dti_below.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/dti",
-    "compile:default": "circom no_default.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/default",
-    "compile:composite": "circom composite_credit_score.circom -l ./node_modules/circomlib/circuits --wasm --r1cs --sym -o build/composite",
+    "circom:install": "which circom || (echo 'circom not found — see scripts/install-circom.sh' && exit 1)",
+    "compile:credit": "circom credit_score_above.circom -l ./node_modules/circomlib/circuits --r1cs --wasm --sym -o build/credit_score",
+    "compile:income": "circom income_above.circom -l ./node_modules/circomlib/circuits --r1cs --wasm --sym -o build/income",
+    "compile:dti": "circom dti_below.circom -l ./node_modules/circomlib/circuits --r1cs --wasm --sym -o build/dti",
+    "compile:default": "circom no_default.circom -l ./node_modules/circomlib/circuits --r1cs --wasm --sym -o build/default",
+    "compile:composite": "circom composite_credit_score.circom -l ./node_modules/circomlib/circuits --r1cs --wasm --sym -o build/composite",
     "compile:all": "npm run compile:credit && npm run compile:income && npm run compile:dti && npm run compile:default && npm run compile:composite",
-    "setup:powersOfTau": "snarkjs powersoftau new bn128 14 pot14_0000.ptau -v",
-    "setup:phase1": "snarkjs powersoftau contribute pot14_0000.ptau pot14_0001.ptau --name=\"First contribution\" -v",
-    "setup:verify": "snarkjs powersoftau verify pot14_0001.ptau",
-    "build": "npm install && npm run compile:all"
+    "setup:pot": "bash scripts/setup.sh",
+    "setup:phase2": "snarkjs groth16 setup build/credit_score/credit_score_above.r1cs pot14_final.ptau build/credit_score/credit_score_above_0000.zkey && snarkjs zkey contribute build/credit_score/credit_score_above_0000.zkey build/credit_score/credit_score_above_final.zkey --name=\"1st contributor\" -v && snarkjs zkey export verificationkey build/credit_score/credit_score_above_final.zkey build/credit_score/verification_key.json",
+    "build": "npm run compile:all && npm run setup:pot && npm run setup:phase2",
+    "verify": "bash scripts/verify.sh",
+    "clean": "rm -rf build/ pot*.ptau"
   },
   "devDependencies": {
     "circomlib": "^2.0.5",

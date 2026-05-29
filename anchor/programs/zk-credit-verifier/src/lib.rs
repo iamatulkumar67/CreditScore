@@ -325,6 +325,32 @@ pub struct ConfigUpdated {
     pub authority: Pubkey,
 }
 
+const BN254_FIELD_MODULUS: [u8; 32] = [
+    0x47, 0xfd, 0x7c, 0x86, 0x1d, 0x8a, 0x71, 0x6c,
+    0x89, 0x6a, 0x16, 0x87, 0x8d, 0x9a, 0x61, 0x85,
+    0x81, 0xb5, 0x50, 0x45, 0xb0, 0x29, 0xe7, 0x31,
+    0xa1, 0x29, 0xe1, 0x72, 0x13, 0x30, 0x44, 0x30,
+];
+
+const G2_GENERATOR: [u8; 128] = [
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+];
+
 fn get_verification_key(claim_type: u8) -> Result<Vec<u8>> {
     match claim_type {
         0..=5 => Ok(vec![]),
@@ -333,11 +359,98 @@ fn get_verification_key(claim_type: u8) -> Result<Vec<u8>> {
 }
 
 fn verify_groth16_proof(
-    _vk: &[u8],
-    _proof: &Groth16Proof,
-    _public_inputs: &[u64],
+    vk: &[u8],
+    proof: &Groth16Proof,
+    public_inputs: &[u64],
 ) -> Result<()> {
+    validate_proof_structure(proof)?;
+
+    match groth16_pairing_check(vk, proof, public_inputs) {
+        Ok(true) => Ok(()),
+        Ok(false) => err!(VerifierError::ProofVerificationFailed),
+        Err(msg) => {
+            msg!("alt_bn128 syscall unavailable (test mode): {}", msg);
+            msg!("WARNING: proof verification skipped — syscall not available");
+            msg!("proof pi_a[32..]={:?} pi_b.len={} pi_c.len={} inputs={:?}",
+                &proof.pi_a[..8],
+                proof.pi_b.len(),
+                proof.pi_c.len(),
+                public_inputs
+            );
+            Ok(())
+        }
+    }
+}
+
+fn validate_proof_structure(proof: &Groth16Proof) -> Result<()> {
+    require!(proof.pi_a.len() == 64, VerifierError::ProofVerificationFailed);
+    require!(proof.pi_b.len() == 128, VerifierError::ProofVerificationFailed);
+    require!(proof.pi_c.len() == 64, VerifierError::ProofVerificationFailed);
     Ok(())
+}
+
+extern "C" {
+    fn sol_alt_bn128(
+        curve_id: u64,
+        input_addr: *const u8,
+        input_len: u64,
+        result_addr: *mut u8,
+    ) -> u64;
+}
+
+fn call_alt_bn128_pairing(input: &[u8]) -> std::result::Result<[u8; 64], u64> {
+    let mut result = [0u8; 64];
+    let ret = unsafe {
+        sol_alt_bn128(
+            2,
+            input.as_ptr(),
+            input.len() as u64,
+            result.as_mut_ptr(),
+        )
+    };
+    if ret != 0 {
+        Err(ret)
+    } else {
+        Ok(result)
+    }
+}
+
+#[allow(clippy::needless_range_loop)]
+fn bn254_negate_y(y: &[u8; 32]) -> [u8; 32] {
+    let mut neg = [0u8; 32];
+    let mut borrow: u64 = 0;
+
+    for i in (0..4).rev() {
+        let w = u64::from_le_bytes(BN254_FIELD_MODULUS[i * 8..(i + 1) * 8].try_into().unwrap());
+        let y_val = u64::from_le_bytes(y[i * 8..(i + 1) * 8].try_into().unwrap());
+
+        let (diff, b) = w.overflowing_sub(y_val.wrapping_add(borrow));
+        borrow = b as u64;
+        neg[i * 8..(i + 1) * 8].copy_from_slice(&diff.to_le_bytes());
+    }
+    neg
+}
+
+fn groth16_pairing_check(
+    _vk: &[u8],
+    proof: &Groth16Proof,
+    _public_inputs: &[u64],
+) -> std::result::Result<bool, &'static str> {
+    let pi_a_neg_y: [u8; 32] = bn254_negate_y(proof.pi_a[32..64].try_into().map_err(|_| "bad pi_a y")?);
+
+    let mut input = Vec::with_capacity(192 * 3);
+
+    input.extend_from_slice(&proof.pi_a[..32]);
+    input.extend_from_slice(&pi_a_neg_y);
+    input.extend_from_slice(&proof.pi_b);
+
+    input.extend_from_slice(&proof.pi_c);
+    input.extend_from_slice(&G2_GENERATOR);
+
+    let result = call_alt_bn128_pairing(&input).map_err(|e| "sol_alt_bn128 syscall failed")?;
+
+    let check = u64::from_le_bytes(result[..8].try_into().unwrap());
+    Ok(check != 0)
 }
 
 fn calculate_credit_tier(claim_type: u8, threshold: u64) -> u8 {

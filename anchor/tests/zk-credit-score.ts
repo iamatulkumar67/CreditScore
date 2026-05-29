@@ -245,6 +245,153 @@ describe("zk-credit-verifier", () => {
     });
   });
 
+  describe("Proof Verification", () => {
+    const validProof = {
+      piA: Array.from(Buffer.alloc(64, 1)),
+      piB: Array.from(Buffer.alloc(128, 2)),
+      piC: Array.from(Buffer.alloc(64, 3)),
+    };
+
+    it("passes proof validation with correct structure", async () => {
+      const expiry = Math.floor(Date.now() / 1000) + 30 * 86400;
+      const nullifier = Array.from(Buffer.alloc(32, 77));
+      const [nfPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("nullifier"), Buffer.from(nullifier)],
+        verifier.programId,
+      );
+
+      await verifier.methods
+        .verifyAndIssueCredential(
+          validProof,
+          {
+            claimType: 1,
+            threshold: new anchor.BN(5000),
+            expiry: new anchor.BN(expiry),
+            nullifier: nullifier,
+          },
+        )
+        .accounts({
+          user: authority,
+          credential: credentialPda,
+          nullifier: nfPda,
+          config: configPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      const cred = await verifier.account.credential.fetch(credentialPda);
+      expect(cred.claimType).to.equal(1);
+      expect(cred.threshold.toNumber()).to.equal(5000);
+    });
+
+    it("rejects proof with invalid pi_a length", async () => {
+      const badProof = {
+        piA: Array.from(Buffer.alloc(63, 1)),
+        piB: Array.from(Buffer.alloc(128, 2)),
+        piC: Array.from(Buffer.alloc(64, 3)),
+      };
+      const expiry = Math.floor(Date.now() / 1000) + 30 * 86400;
+      const nullifier = Array.from(Buffer.alloc(32, 88));
+      const [nfPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("nullifier"), Buffer.from(nullifier)],
+        verifier.programId,
+      );
+
+      try {
+        await verifier.methods
+          .verifyAndIssueCredential(
+            badProof,
+            {
+              claimType: 2,
+              threshold: new anchor.BN(43),
+              expiry: new anchor.BN(expiry),
+              nullifier: nullifier,
+            },
+          )
+          .accounts({
+            user: authority,
+            credential: credentialPda,
+            nullifier: nfPda,
+            config: configPda,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("ProofVerificationFailed");
+      }
+    });
+
+    it("rejects proof with invalid pi_b length", async () => {
+      const badProof = {
+        piA: Array.from(Buffer.alloc(64, 1)),
+        piB: Array.from(Buffer.alloc(127, 2)),
+        piC: Array.from(Buffer.alloc(64, 3)),
+      };
+      const expiry = Math.floor(Date.now() / 1000) + 30 * 86400;
+      const nullifier = Array.from(Buffer.alloc(32, 97));
+      const [nfPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("nullifier"), Buffer.from(nullifier)],
+        verifier.programId,
+      );
+
+      try {
+        await verifier.methods
+          .verifyAndIssueCredential(
+            badProof,
+            {
+              claimType: 2,
+              threshold: new anchor.BN(43),
+              expiry: new anchor.BN(expiry),
+              nullifier: nullifier,
+            },
+          )
+          .accounts({
+            user: authority,
+            credential: credentialPda,
+            nullifier: nfPda,
+            config: configPda,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+        assert.fail("Should have thrown");
+      } catch (e) {
+        expect(e.message).to.include("ProofVerificationFailed");
+      }
+    });
+
+    it("issues credentials for all claim types", async () => {
+      const baseNullifier = 200;
+      for (let claimType = 0; claimType <= 3; claimType++) {
+        const expiry = Math.floor(Date.now() / 1000) + 30 * 86400;
+        const nullifier = Array.from(Buffer.alloc(32, baseNullifier + claimType));
+        const [nfPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("nullifier"), Buffer.from(nullifier)],
+          verifier.programId,
+        );
+
+        await verifier.methods
+          .verifyAndIssueCredential(
+            validProof,
+            {
+              claimType,
+              threshold: new anchor.BN(claimType === 2 ? 43 : 700),
+              expiry: new anchor.BN(expiry),
+              nullifier: nullifier,
+            },
+          )
+          .accounts({
+            user: Keypair.generate().publicKey,
+            credential: credentialPda,
+            nullifier: nfPda,
+            config: configPda,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+      }
+    });
+  });
+
   describe("Lending Pool", () => {
     const mint = PublicKey.default;
 

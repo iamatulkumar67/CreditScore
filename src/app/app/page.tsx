@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import Link from "next/link";
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
@@ -63,39 +65,39 @@ function useSDK() {
       const sdk = initSDK(wallet.adapter);
       setLoading(true);
 
-      getAPI().getStats().then((protocolStats) => {
-        if (protocolStats) {
-          setStats([
-            { label: "Total Value Locked", value: `$${protocolStats.totalTvlUsd || "38.2M"}`, icon: BarChart3, change: "+12.4%" },
-            { label: "Active Loans", value: protocolStats.activeLoans?.toString() || "1,847", icon: Activity, change: "+8.2%" },
-            { label: "Credentials Issued", value: protocolStats.totalCredentials?.toString() || "24,391", icon: UserCheck, change: "+23.7%" },
-            { label: "ZKCR Staked", value: protocolStats.zkcrStaked || "142.5M", icon: Coins, change: "+5.1%" },
-          ]);
-        }
-      }).catch(() => {});
+      Promise.allSettled([
+        getAPI().getStats().then((protocolStats) => {
+          if (protocolStats) {
+            setStats([
+              { label: "Total Value Locked", value: `$${protocolStats.totalTvlUsd || "38.2M"}`, icon: BarChart3, change: "+12.4%" },
+              { label: "Active Loans", value: protocolStats.activeLoans?.toString() || "1,847", icon: Activity, change: "+8.2%" },
+              { label: "Credentials Issued", value: protocolStats.totalCredentials?.toString() || "24,391", icon: UserCheck, change: "+23.7%" },
+              { label: "ZKCR Staked", value: protocolStats.zkcrStaked || "142.5M", icon: Coins, change: "+5.1%" },
+            ]);
+          }
+        }),
+        getAPI().getPools().then((poolInfos) => {
+          if (poolInfos && poolInfos.length > 0) {
+            setPools(poolInfos.map((p: any) => ({
+              name: p.symbol ? `${p.symbol} Lending Pool` : `${p.mint.slice(0, 8)}... Pool`,
+              tvl: `$${p.totalDeposits || "0"}`,
+              apy: `${p.borrowApy || 0}%`,
+              utilization: `${p.utilizationRate || 0}%`,
+              color: "text-emerald-400",
+            })));
+          }
+        }),
+        publicKey
+          ? getIntegration()?.getCreditTier(publicKey.toBase58()).then((info) => {
+              setCreditTier({
+                tier: info.isValid ? `Tier ${info.tier}` : "Not Verified",
+                expiresAt: info.isValid ? info.expiresAt : null,
+              });
+            }).catch(() => {})
+          : Promise.resolve(),
+      ]).finally(() => setLoading(false));
 
-      getAPI().getPools().then((poolInfos) => {
-        if (poolInfos && poolInfos.length > 0) {
-          setPools(poolInfos.map((p: any) => ({
-            name: p.symbol ? `${p.symbol} Lending Pool` : `${p.mint.slice(0, 8)}... Pool`,
-            tvl: `$${p.totalDeposits || "0"}`,
-            apy: `${p.borrowApy || 0}%`,
-            utilization: `${p.utilizationRate || 0}%`,
-            color: "text-emerald-400",
-          })));
-        }
-      }).catch(() => {});
-
-      if (publicKey) {
-        getIntegration()?.getCreditTier(publicKey.toBase58()).then((info) => {
-          setCreditTier({
-            tier: info.isValid ? `Tier ${info.tier}` : "Not Verified",
-            expiresAt: info.isValid ? info.expiresAt : null,
-          });
-        }).catch(() => {});
-      }
-
-      setLoading(false);
+      return () => destroySDK();
     } else {
       destroySDK();
       setCreditTier({ tier: "Not Verified", expiresAt: null });
@@ -369,10 +371,68 @@ function Dashboard() {
   );
 }
 
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
+      return (
+        <div className="min-h-screen bg-[#060b09] flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
+              <Shield className="h-8 w-8 text-red-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
+            <p className="text-emerald-100/60 mb-2">
+              {this.state.error?.message || "An unexpected error occurred"}
+            </p>
+            <p className="text-emerald-100/40 text-sm mb-6">
+              This is likely due to a wallet connection or SDK issue. Please try reloading.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={() => window.location.reload()}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white"
+              >
+                Reload
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { this.setState({ hasError: false, error: null }); }}
+                className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+              >
+                Try again
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function AppPage() {
   return (
-    <SolanaWalletProvider>
-      <Dashboard />
-    </SolanaWalletProvider>
+    <ErrorBoundary>
+      <SolanaWalletProvider>
+        <Dashboard />
+      </SolanaWalletProvider>
+    </ErrorBoundary>
   );
 }
