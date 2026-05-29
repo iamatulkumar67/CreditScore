@@ -74,11 +74,8 @@ export default function Navbar() {
               <Github className="h-4 w-4" />
               <span>SDK</span>
             </a>
-            <Button
-              variant="ghost"
-              className="text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/10"
-            >
-              Documentation
+            <Button asChild variant="ghost" className="text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/10">
+              <a href="https://github.com/iamatulkumar67/CreditScore/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
             </Button>
             <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-600/25">
               <Link href="/app">Launch App</Link>
@@ -111,8 +108,8 @@ export default function Navbar() {
               </a>
             ))}
             <div className="pt-3 border-t border-emerald-500/10 flex flex-col gap-2">
-              <Button variant="ghost" className="w-full text-emerald-300 justify-start">
-                Documentation
+              <Button asChild variant="ghost" className="w-full text-emerald-300 justify-start">
+                <a href="https://github.com/iamatulkumar67/CreditScore/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
               </Button>
               <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0">
                 <Link href="/app">Launch App</Link>

@@ -15,7 +15,7 @@ const FOOTER_LINKS = [
   {
     title: "Developers",
     links: [
-      { label: "Documentation", href: "#" },
+      { label: "Documentation", href: "https://github.com/iamatulkumar67/CreditScore/tree/main/docs" },
       { label: "Integration SDK", href: "https://github.com/iamatulkumar67/zkcreditscore-sdk" },
       { label: "Smart Contracts", href: "#" },
       { label: "ZK Circuits", href: "#" },
