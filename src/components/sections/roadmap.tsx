@@ -1,6 +1,6 @@
 "use client";
 
-import { Rocket, Flag, Target, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Rocket, Flag, Target, CheckCircle2, Clock, ArrowRight, CircleDot } from "lucide-react";
 import { ROADMAP_PHASES } from "@/lib/types";
 
 const PHASE_ICONS = [Flag, Rocket, Target];
@@ -80,10 +80,10 @@ export default function Roadmap() {
 
                       <div className="flex items-start gap-3">
                         <div className="shrink-0 mt-0.5">
-                          {phaseIndex === 0 ? (
-                            <CheckCircle2
-                              className={`h-5 w-5 ${phaseColor.text}`}
-                            />
+                          {milestone.status === "done" ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                          ) : milestone.status === "partial" ? (
+                            <CircleDot className="h-5 w-5 text-amber-400" />
                           ) : (
                             <Clock className="h-5 w-5 text-emerald-100/30" />
                           )}
