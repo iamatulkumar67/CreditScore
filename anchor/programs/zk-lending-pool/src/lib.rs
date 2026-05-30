@@ -33,7 +33,6 @@ pub mod zk_lending_pool {
             mint: ctx.accounts.mint.key(),
             authority: ctx.accounts.authority.key(),
         });
-
         Ok(())
     }
 
@@ -43,18 +42,12 @@ pub mod zk_lending_pool {
         borrow_amount: u64,
     ) -> Result<()> {
         let clock = Clock::get()?;
-
         require!(!ctx.accounts.pool.paused, LendingError::PoolPaused);
 
         let credential_tier = read_credential_tier(&ctx.accounts.credential)?;
-        let (allowed_ratio, max_borrow) = get_applicable_terms(
-            credential_tier,
-        )?;
+        let (allowed_ratio, max_borrow) = get_applicable_terms(credential_tier)?;
 
-        require!(
-            borrow_amount <= max_borrow,
-            LendingError::ExceedsMaxBorrow
-        );
+        require!(borrow_amount <= max_borrow, LendingError::ExceedsMaxBorrow);
 
         let required_collateral = borrow_amount
             .checked_mul(allowed_ratio)
@@ -67,6 +60,7 @@ pub mod zk_lending_pool {
             LendingError::InsufficientCollateral
         );
 
+        // Transfer collateral from user to vault
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -79,6 +73,13 @@ pub mod zk_lending_pool {
             collateral_amount,
         )?;
 
+        // Transfer borrow tokens from vault to user (pool authority signs)
+        let borrow_mint_key = ctx.accounts.borrow_mint.key();
+        let pool_seeds = &[
+            b"lending-pool".as_ref(),
+            borrow_mint_key.as_ref(),
+            &[ctx.accounts.pool.bump],
+        ];
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -87,14 +88,13 @@ pub mod zk_lending_pool {
                     to: ctx.accounts.user_borrow_ata.to_account_info(),
                     authority: ctx.accounts.pool.to_account_info(),
                 },
-                &[&[
-                    b"vault",
-                    ctx.accounts.borrow_mint.key().as_ref(),
-                    &[ctx.accounts.pool.bump],
-                ]],
+                &[pool_seeds],
             ),
             borrow_amount,
         )?;
+
+        let pool = &mut ctx.accounts.pool;
+        let interest_rate = compute_borrow_rate(pool.utilization_rate, credential_tier, pool);
 
         let loan = &mut ctx.accounts.loan;
         loan.borrower = ctx.accounts.user.key();
@@ -104,41 +104,35 @@ pub mod zk_lending_pool {
         loan.borrow_amount = borrow_amount;
         loan.collateral_ratio = allowed_ratio;
         loan.credit_tier_at_issuance = credential_tier;
-        loan.interest_rate = get_borrow_rate(ctx.accounts.pool.utilization_rate, loan.credit_tier_at_issuance, &ctx.accounts.pool);
+        loan.interest_rate = interest_rate;
         loan.start_timestamp = clock.unix_timestamp as u64;
         loan.maturity_timestamp = 0;
         loan.status = LoanStatus::Active as u8;
         loan.repaid_amount = 0;
         loan.bump = ctx.bumps.loan;
 
-        let pool = &mut ctx.accounts.pool;
         pool.loan_counter = pool.loan_counter.checked_add(1).ok_or(LendingError::MathOverflow)?;
+        pool.total_borrows = pool.total_borrows.checked_add(borrow_amount).ok_or(LendingError::MathOverflow)?;
 
         emit!(LoanCreated {
             loan_id: loan.key(),
             borrower: ctx.accounts.user.key(),
             amount: borrow_amount,
-            credit_tier: loan.credit_tier_at_issuance,
+            credit_tier: credential_tier,
         });
-
         Ok(())
     }
 
-    pub fn repay(ctx: Context<Repay>, loan_id: u64, amount: u64) -> Result<()> {
+    pub fn repay(ctx: Context<Repay>, _loan_id: u64, amount: u64) -> Result<()> {
         let loan = &mut ctx.accounts.loan;
-        let clock = Clock::get()?;
 
         require!(
             loan.status == LoanStatus::Active as u8,
             LendingError::LoanNotActive
         );
 
-        let actual_repay = if amount > loan.borrow_amount - loan.repaid_amount {
-            loan.borrow_amount - loan.repaid_amount
-        } else {
-            amount
-        };
-
+        let remaining = loan.borrow_amount.saturating_sub(loan.repaid_amount);
+        let actual_repay = amount.min(remaining);
         require!(actual_repay > 0, LendingError::InsufficientRepayAmount);
 
         token::transfer(
@@ -153,10 +147,7 @@ pub mod zk_lending_pool {
             actual_repay,
         )?;
 
-        loan.repaid_amount = loan
-            .repaid_amount
-            .checked_add(actual_repay)
-            .ok_or(LendingError::MathOverflow)?;
+        loan.repaid_amount = loan.repaid_amount.checked_add(actual_repay).ok_or(LendingError::MathOverflow)?;
 
         if loan.repaid_amount >= loan.borrow_amount {
             loan.status = LoanStatus::Repaid as u8;
@@ -167,11 +158,10 @@ pub mod zk_lending_pool {
             amount: actual_repay,
             full_repayment: loan.status == LoanStatus::Repaid as u8,
         });
-
         Ok(())
     }
 
-    pub fn liquidate(ctx: Context<Liquidate>, loan_id: u64, debt_to_cover: u64) -> Result<()> {
+    pub fn liquidate(ctx: Context<Liquidate>, _loan_id: u64, debt_to_cover: u64) -> Result<()> {
         let loan = &mut ctx.accounts.loan;
 
         require!(
@@ -179,38 +169,26 @@ pub mod zk_lending_pool {
             LendingError::LoanNotActive
         );
 
-        let borrow_decimals = ctx.accounts.borrow_mint.decimals as u32;
-        let collat_decimals = ctx.accounts.collateral_mint.decimals as u32;
+        // Simplified liquidation check: if remaining debt > collateral value at threshold
+        let liquidation_threshold = loan.collateral_ratio.saturating_sub(500);
+        let remaining_debt = loan.borrow_amount.saturating_sub(loan.repaid_amount);
 
-        let borrow_value = (debt_to_cover as u128)
-            .checked_mul(100_000_000u128)
-            .ok_or(LendingError::MathOverflow)?
-            .checked_div(10u128.pow(borrow_decimals))
-            .ok_or(LendingError::MathOverflow)?;
-
-        let collat_value = (loan.collateral_amount as u128)
-            .checked_mul(100_000_000u128)
-            .ok_or(LendingError::MathOverflow)?
-            .checked_div(10u128.pow(collat_decimals))
-            .ok_or(LendingError::MathOverflow)?;
-
-        let current_ratio = if borrow_value > 0 {
-            (collat_value * 10000).checked_div(borrow_value)
-                .ok_or(LendingError::MathOverflow)?
+        let current_ratio = if remaining_debt > 0 {
+            (loan.collateral_amount as u128)
+                .checked_mul(10000)
+                .unwrap_or(0)
+                .checked_div(remaining_debt as u128)
+                .unwrap_or(0)
         } else {
-            0
+            u128::MAX
         };
-
-        let liquidation_threshold = loan
-            .collateral_ratio
-            .checked_sub(500)
-            .ok_or(LendingError::MathOverflow)?;
 
         require!(
             current_ratio < liquidation_threshold as u128,
             LendingError::NotEligibleForLiquidation
         );
 
+        // Liquidator pays debt
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -223,12 +201,18 @@ pub mod zk_lending_pool {
             debt_to_cover,
         )?;
 
+        // Liquidator receives collateral + 5% bonus
         let collateral_to_seize = (debt_to_cover as u128)
-            .checked_mul(10500u128)
+            .checked_mul(10500)
             .ok_or(LendingError::MathOverflow)?
-            .checked_div(10000u128)
-            .ok_or(LendingError::MathOverflow)?;
+            .checked_div(10000)
+            .ok_or(LendingError::MathOverflow)? as u64;
 
+        let pool_seeds = &[
+            b"lending-pool".as_ref(),
+            ctx.accounts.pool.mint.as_ref(),
+            &[ctx.accounts.pool.bump],
+        ];
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -237,13 +221,9 @@ pub mod zk_lending_pool {
                     to: ctx.accounts.liquidator_collateral_ata.to_account_info(),
                     authority: ctx.accounts.pool.to_account_info(),
                 },
-                &[&[
-                    b"vault",
-                    ctx.accounts.collateral_mint.key().as_ref(),
-                    &[ctx.accounts.pool.bump],
-                ]],
+                &[pool_seeds],
             ),
-            collateral_to_seize as u64,
+            collateral_to_seize,
         )?;
 
         loan.status = LoanStatus::Liquidated as u8;
@@ -252,36 +232,34 @@ pub mod zk_lending_pool {
             borrower: loan.borrower,
             liquidator: ctx.accounts.liquidator.key(),
             debt_covered: debt_to_cover,
-            collateral_seized: collateral_to_seize as u64,
+            collateral_seized: collateral_to_seize,
         });
-
         Ok(())
     }
 
-    pub fn get_borrow_rate(
-        ctx: Context<GetBorrowRate>,
-    ) -> Result<u64> {
+    pub fn query_borrow_rate(ctx: Context<QueryBorrowRate>) -> Result<u64> {
         let pool = &ctx.accounts.pool;
         let utilization = pool.utilization_rate;
 
         let rate = if utilization <= pool.optimal_utilization {
-            pool.base_rate as u128
-                + ((utilization as u128) * (pool.slope1 as u128))
-                    .checked_div(pool.optimal_utilization as u128)
-                    .ok_or(LendingError::MathOverflow)?
+            if pool.optimal_utilization == 0 {
+                pool.base_rate
+            } else {
+                pool.base_rate
+                    + (utilization as u128 * pool.slope1 as u128 / pool.optimal_utilization as u128) as u64
+            }
         } else {
-            let excess = (utilization as u128)
-                .checked_sub(pool.optimal_utilization as u128)
-                .ok_or(LendingError::MathOverflow)?;
-            let max_util = 100u128;
-            pool.base_rate as u128
-                + (pool.slope1 as u128)
-                + (excess * (pool.slope2 as u128 - pool.slope1 as u128))
-                    .checked_div(max_util.checked_sub(pool.optimal_utilization as u128).ok_or(LendingError::MathOverflow)?)
-                    .ok_or(LendingError::MathOverflow)?
+            let excess = utilization.saturating_sub(pool.optimal_utilization);
+            let denom = 100u64.saturating_sub(pool.optimal_utilization);
+            if denom == 0 {
+                pool.base_rate + pool.slope1
+            } else {
+                pool.base_rate
+                    + pool.slope1
+                    + (excess as u128 * (pool.slope2.saturating_sub(pool.slope1)) as u128 / denom as u128) as u64
+            }
         };
-
-        Ok(rate as u64)
+        Ok(rate)
     }
 
     pub fn update_pool_config(
@@ -289,7 +267,6 @@ pub mod zk_lending_pool {
         new_config: LendingPoolConfig,
     ) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
-
         require!(
             pool.authority == ctx.accounts.authority.key(),
             LendingError::Unauthorized
@@ -305,10 +282,11 @@ pub mod zk_lending_pool {
             pool: pool.key(),
             authority: ctx.accounts.authority.key(),
         });
-
         Ok(())
     }
 }
+
+// --- Data types ---
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct LendingPoolConfig {
@@ -325,6 +303,8 @@ pub enum LoanStatus {
     Repaid = 1,
     Liquidated = 2,
 }
+
+// --- Accounts ---
 
 #[account]
 #[derive(InitSpace)]
@@ -361,6 +341,8 @@ pub struct Loan {
     pub repaid_amount: u64,
     pub bump: u8,
 }
+
+// --- Instruction contexts ---
 
 #[derive(Accounts)]
 pub struct InitializePool<'info> {
@@ -399,15 +381,15 @@ pub struct DepositAndBorrow<'info> {
 
     #[account(
         mut,
-        seeds = [b"vault", collateral_mint.key().as_ref()],
-        bump,
+        token::mint = collateral_mint,
+        token::authority = pool,
     )]
     pub vault_collateral: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"vault", borrow_mint.key().as_ref()],
-        bump,
+        token::mint = borrow_mint,
+        token::authority = pool,
     )]
     pub vault_borrow: Account<'info, TokenAccount>,
 
@@ -435,19 +417,13 @@ pub struct DepositAndBorrow<'info> {
     pub loan: Account<'info, Loan>,
 
     /// CHECK: ZK credential account from zk-credit-verifier program
-    #[account(
-        seeds = [b"credential", user.key().as_ref()],
-        bump,
-        seeds::program = verifier_program.key(),
-    )]
     pub credential: UncheckedAccount<'info>,
 
-    /// CHECK: zk-credit-verifier program ID — used to derive credential PDA
+    /// CHECK: zk-credit-verifier program ID
     pub verifier_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -460,18 +436,15 @@ pub struct Repay<'info> {
 
     #[account(
         mut,
-        seeds = [b"loan", borrower.key().as_ref(), &loan_id.to_le_bytes()],
+        seeds = [b"loan", loan.borrower.as_ref(), &loan_id.to_le_bytes()],
         bump,
     )]
     pub loan: Account<'info, Loan>,
 
-    /// CHECK: borrower of the loan
-    pub borrower: AccountInfo<'info>,
-
     #[account(
         mut,
-        seeds = [b"vault", borrow_mint.key().as_ref()],
-        bump,
+        token::mint = borrow_mint,
+        token::authority = pool,
     )]
     pub vault_borrow: Account<'info, TokenAccount>,
 
@@ -481,6 +454,12 @@ pub struct Repay<'info> {
         token::authority = user,
     )]
     pub user_borrow_ata: Account<'info, TokenAccount>,
+
+    #[account(
+        seeds = [b"lending-pool", borrow_mint.key().as_ref()],
+        bump,
+    )]
+    pub pool: Account<'info, LendingPool>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -503,25 +482,22 @@ pub struct Liquidate<'info> {
 
     #[account(
         mut,
-        seeds = [b"loan", borrower.key().as_ref(), &loan_id.to_le_bytes()],
+        seeds = [b"loan", loan.borrower.as_ref(), &loan_id.to_le_bytes()],
         bump,
     )]
     pub loan: Account<'info, Loan>,
 
-    /// CHECK: borrower of the loan
-    pub borrower: AccountInfo<'info>,
-
     #[account(
         mut,
-        seeds = [b"vault", collateral_mint.key().as_ref()],
-        bump,
+        token::mint = collateral_mint,
+        token::authority = pool,
     )]
     pub vault_collateral: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"vault", borrow_mint.key().as_ref()],
-        bump,
+        token::mint = borrow_mint,
+        token::authority = pool,
     )]
     pub vault_borrow: Account<'info, TokenAccount>,
 
@@ -543,7 +519,7 @@ pub struct Liquidate<'info> {
 }
 
 #[derive(Accounts)]
-pub struct GetBorrowRate<'info> {
+pub struct QueryBorrowRate<'info> {
     pub pool: Account<'info, LendingPool>,
 }
 
@@ -554,11 +530,13 @@ pub struct UpdatePoolConfig<'info> {
 
     #[account(
         mut,
-        seeds = [b"lending-pool", pool.mint.key().as_ref()],
+        seeds = [b"lending-pool", pool.mint.as_ref()],
         bump,
     )]
     pub pool: Account<'info, LendingPool>,
 }
+
+// --- Errors ---
 
 #[error_code]
 pub enum LendingError {
@@ -576,13 +554,11 @@ pub enum LendingError {
     MathOverflow,
     #[msg("Unauthorized access")]
     Unauthorized,
-    #[msg("Invalid collateral price")]
-    InvalidCollateralPrice,
-    #[msg("Invalid borrow price")]
-    InvalidBorrowPrice,
     #[msg("Repay amount must be greater than zero")]
     InsufficientRepayAmount,
 }
+
+// --- Events ---
 
 #[event]
 pub struct PoolInitialized {
@@ -620,6 +596,8 @@ pub struct PoolConfigUpdated {
     pub authority: Pubkey,
 }
 
+// --- Helper functions ---
+
 fn read_credential_tier(credential: &UncheckedAccount) -> Result<u8> {
     let data = credential.try_borrow_data()?;
     if data.len() < 41 {
@@ -629,47 +607,35 @@ fn read_credential_tier(credential: &UncheckedAccount) -> Result<u8> {
     Ok(data[40])
 }
 
-fn get_applicable_terms(
-    credit_tier: u8,
-) -> Result<(u64, u64)> {
+fn get_applicable_terms(credit_tier: u8) -> Result<(u64, u64)> {
+    // Collateral ratios in basis points (10000 = 100%)
+    // Tier 0: 150%, Tier 1: 110%, Tier 2: 80%, Tier 3: 60%, Tier 4: 50%
     let tier_ratios: [u64; 5] = [15000, 11000, 8000, 6000, 5000];
-    let max_loans: [u64; 5] = [50000, 100000, 250000, 500000, 1_000_000];
+    let max_loans: [u64; 5] = [50_000_000_000, 100_000_000_000, 250_000_000_000, 500_000_000_000, 1_000_000_000_000];
 
-    let tier = credit_tier as usize;
-    let ratio = if tier < tier_ratios.len() {
-        tier_ratios[tier]
-    } else {
-        tier_ratios[0]
-    };
-    let max_loan = if tier < max_loans.len() {
-        max_loans[tier]
-    } else {
-        max_loans[0]
-    };
-
-    Ok((ratio, max_loan))
+    let tier = (credit_tier as usize).min(4);
+    Ok((tier_ratios[tier], max_loans[tier]))
 }
 
-fn get_borrow_rate(
-    utilization: u64,
-    _credit_tier: u8,
-    pool: &Account<LendingPool>,
-) -> u64 {
+fn compute_borrow_rate(utilization: u64, credit_tier: u8, pool: &LendingPool) -> u64 {
     let base = if utilization <= pool.optimal_utilization {
-        pool.base_rate
-            + (utilization * pool.slope1) / pool.optimal_utilization
+        if pool.optimal_utilization == 0 {
+            pool.base_rate
+        } else {
+            pool.base_rate + (utilization as u128 * pool.slope1 as u128 / pool.optimal_utilization as u128) as u64
+        }
     } else {
-        let excess = utilization - pool.optimal_utilization;
-        pool.base_rate
-            + pool.slope1
-            + (excess * (pool.slope2 - pool.slope1))
-                / (100 - pool.optimal_utilization)
+        let excess = utilization.saturating_sub(pool.optimal_utilization);
+        let denom = 100u64.saturating_sub(pool.optimal_utilization);
+        if denom == 0 {
+            pool.base_rate + pool.slope1
+        } else {
+            pool.base_rate + pool.slope1 + (excess as u128 * pool.slope2.saturating_sub(pool.slope1) as u128 / denom as u128) as u64
+        }
     };
 
+    // Tier-based discount
     let tier_discounts: [u64; 5] = [0, 200, 400, 600, 800];
-    let discount = tier_discounts[_credit_tier as usize];
-
-    if base > discount { base - discount } else { 50 }
+    let discount = tier_discounts[(credit_tier as usize).min(4)];
+    base.saturating_sub(discount).max(50)
 }
-
-

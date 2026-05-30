@@ -4,9 +4,9 @@ include "poseidon.circom";
 include "comparators.circom";
 
 template DebtToIncomeBelow() {
-    signal private input totalMonthlyDebt;
-    signal private input totalMonthlyIncome;
-    signal private input salt;
+    signal input totalMonthlyDebt;
+    signal input totalMonthlyIncome;
+    signal input salt;
 
     signal input dtiThreshold;
     signal input addressCommitment;
@@ -40,4 +40,4 @@ template DebtToIncomeBelow() {
     isValid <== below.out * maxDti * nullifierEq.out;
 }
 
-component main = DebtToIncomeBelow();
+component main {public [dtiThreshold, addressCommitment, nullifier, expiryTimestamp]} = DebtToIncomeBelow();

@@ -51,7 +51,7 @@ async function main() {
   const PROGRAM_NAMES: Record<string, string> = {
     zk_credit_verifier: "9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh",
     zk_lending_pool: "HbHw6ib3eCfxbV1tv7X817VZ9J9tR4ZLGpNEQJ2jYDQo",
-    zkc_token: "4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump",
+    zkc_token: "AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ",
     zk_governance: "4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT",
   };
 

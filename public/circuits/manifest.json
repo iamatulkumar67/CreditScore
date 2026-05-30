@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "circuits": [
+    {
+      "id": "credit_score_above",
+      "wasmPath": "/circuits/credit_score_above/credit_score_above.wasm",
+      "zkeyPath": "/circuits/credit_score_above/credit_score_above_final.zkey",
+      "vkPath": "/circuits/credit_score_above/verification_key.json"
+    },
+    {
+      "id": "income_above",
+      "wasmPath": "/circuits/income_above/income_above.wasm",
+      "zkeyPath": "/circuits/income_above/income_above_final.zkey",
+      "vkPath": "/circuits/income_above/verification_key.json"
+    },
+    {
+      "id": "dti_below",
+      "wasmPath": "/circuits/dti_below/dti_below.wasm",
+      "zkeyPath": "/circuits/dti_below/dti_below_final.zkey",
+      "vkPath": "/circuits/dti_below/verification_key.json"
+    },
+    {
+      "id": "no_default",
+      "wasmPath": "/circuits/no_default/no_default.wasm",
+      "zkeyPath": "/circuits/no_default/no_default_final.zkey",
+      "vkPath": "/circuits/no_default/verification_key.json"
+    },
+    {
+      "id": "composite_credit_score",
+      "wasmPath": "/circuits/composite_credit_score/composite_credit_score.wasm",
+      "zkeyPath": "/circuits/composite_credit_score/composite_credit_score_final.zkey",
+      "vkPath": "/circuits/composite_credit_score/verification_key.json"
+    }
+  ],
+  "generatedAt": "2026-05-30T02:46:08.847Z",
+  "mode": "devnet-mock"
+}

@@ -1,0 +1,80 @@
+{
+  "protocol": "groth16",
+  "curve": "bn128",
+  "nPublic": 4,
+  "vk_alpha_1": [
+    "cad746695a336868e812d57352eb0189def22264c353b289553e97ca4261fdc9",
+    "5198294e1967e321beb9bfd3136966b9b6a756792c485fff687c4598115fc61e",
+    "1"
+  ],
+  "vk_beta_2": [
+    [
+      "78daf63f7d5ca82e8587e949206a3a133f7214b82b47174678f902eac12a0fcd",
+      "25b892015c33f1b0c87e7f4fdb5110aa0a76d8b6f820603de8b351abf002aec9"
+    ],
+    [
+      "b392967a067f07bab707fb293ba6298dce711d54645ad294b3106e3624b330c8",
+      "cf2b8d35631e44bae4580e7e8b11f6c865a7a57548fafff8c86c52a688ad3563"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_gamma_2": [
+    [
+      "b0611e21c6cc7e435c353f7e1e008f9d143cde228fffd5984b2fcf1e1b823f6d",
+      "86e0786b84e6b59e9bc173c5ec4d3ecb676274edd4b0e143dd1686ff888dcaa2"
+    ],
+    [
+      "e7dccafe2ca23a40aefa8540865815ec36d92b92b3f073e10bbeb4f2386cf4bc",
+      "ffe263678d10ec5fc2e2f1c72c038b5298f15d0e209889872e318006ee5f4e9f"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_delta_2": [
+    [
+      "c337cfe6d0729a6d310910ecd204389dbf662bf310012d5a8cc1f1055aa19ae1",
+      "d064d69d68b7f388da7139660d0d0bc95fbd3ba89177e274e3630a5307ee406d"
+    ],
+    [
+      "1d99ed35930be044daeb0983424cf4e745f1f273394613604e0ecb30b6767268",
+      "d18e15173811d55740e1327fde7d7202f7b04d2de6dd046ab6c804dd5d4be4ff"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "IC": [
+    [
+      "e266dc4ace1ae86d5e50e053d81b49cbaafe394f9641eabc70e6a5cca2d02e22",
+      "bd08d8e7d8fee735f89c1a63680ce070f70820e361171ea301e7d2a20c0afbf0",
+      "1"
+    ],
+    [
+      "b0d67d5f5e67b495ba69c8f7cb09f6431b21dfb54779924e0aef3bc618813267",
+      "649ccaec4c35b49920b246dfcead86b4f14095b70d506b2b58afc9a9ece280a6",
+      "1"
+    ],
+    [
+      "e475acce986b67b32205ff4a8bab0cad7ce031aa2f303af11a01d75677a2aa0c",
+      "5e13dbbe617ab973428f2cd6f6f85d1d4484596497f97ead06021be5810018cb",
+      "1"
+    ],
+    [
+      "61b1623e854b203bd44ce59ae77ea0e53ad9cae8e771e4d7eba6a43cc2e0b889",
+      "489794d44ad4c57de66ba96fb2b01660696228857a846819c5ba12aba36d7b77",
+      "1"
+    ],
+    [
+      "8b36833c513551cf909459d2fbfa6fec92e29983e003d948f43169eab7f8e5f0",
+      "4355d80e460817dee49fb42a80b683e29450c627ecc114217635f8250e56b4ef",
+      "1"
+    ]
+  ],
+  "circuit": "no_default"
+}

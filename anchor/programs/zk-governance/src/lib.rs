@@ -3,15 +3,15 @@ use anchor_spl::token_interface::TokenAccount;
 
 declare_id!("4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT");
 
-pub const PROPOSAL_DESCRIPTION_MAX_LEN: usize = 500;
-pub const MIN_VOTING_PERIOD: i64 = 86_400;
-pub const MAX_VOTING_PERIOD: i64 = 604_800;
-pub const STANDARD_TIMELOCK: i64 = 172_800;
-pub const EMERGENCY_TIMELOCK: i64 = 21_600;
-pub const QUORUM_BPS: u64 = 1000;
-pub const MIN_STAKE_TO_PROPOSE: u64 = 10_000_000_000_000;
-pub const MAX_TARGETS: usize = 8;
-pub const MAX_INSTRUCTION_DATA: usize = 256;
+pub const PROPOSAL_DESCRIPTION_MAX_LEN: usize = 200;
+pub const MIN_VOTING_PERIOD: i64 = 86_400;      // 1 day
+pub const MAX_VOTING_PERIOD: i64 = 604_800;      // 7 days
+pub const STANDARD_TIMELOCK: i64 = 172_800;      // 2 days
+pub const EMERGENCY_TIMELOCK: i64 = 21_600;      // 6 hours
+pub const QUORUM_BPS: u64 = 1000;                // 10%
+pub const MIN_STAKE_TO_PROPOSE: u64 = 10_000_000_000_000; // 10,000 ZKCR
+pub const MAX_TARGETS: usize = 4;
+pub const MAX_INSTRUCTION_DATA: usize = 64;
 
 #[program]
 pub mod zk_governance {
@@ -42,7 +42,7 @@ pub mod zk_governance {
             description.len() <= PROPOSAL_DESCRIPTION_MAX_LEN,
             GovernanceError::DescriptionTooLong
         );
-        require!(targets.len() > 0, GovernanceError::NoTargets);
+        require!(!targets.is_empty(), GovernanceError::NoTargets);
         require!(targets.len() <= MAX_TARGETS, GovernanceError::TooManyTargets);
         require!(
             targets.len() == instruction_datas.len(),
@@ -60,13 +60,16 @@ pub mod zk_governance {
         );
 
         let config = &mut ctx.accounts.config;
-        let proposal = &mut ctx.accounts.proposal;
         let clock = Clock::get()?;
 
-        config.proposal_count = config.proposal_count.checked_add(1).ok_or(GovernanceError::MathOverflow)?;
-
+        let proposal = &mut ctx.accounts.proposal;
         proposal.id = config.proposal_count;
+
+        config.proposal_count = config.proposal_count.checked_add(1).ok_or(GovernanceError::MathOverflow)?;
         proposal.proposer = staker.key();
+
+        // Store description for event before moving
+        let desc_preview = description[..description.len().min(100)].to_string();
         proposal.description = description;
         proposal.target_count = targets.len() as u8;
 
@@ -76,15 +79,13 @@ pub mod zk_governance {
         }
         proposal.targets = buf;
 
-        let mut idx = 0u8;
         let mut data_buf = [0u8; MAX_TARGETS * MAX_INSTRUCTION_DATA];
-        for instr in &instruction_datas {
+        for (i, instr) in instruction_datas.iter().enumerate() {
             let len = instr.len().min(MAX_INSTRUCTION_DATA);
-            data_buf[idx as usize..idx as usize + len].copy_from_slice(&instr[..len]);
-            idx += MAX_INSTRUCTION_DATA as u8;
+            let offset = i * MAX_INSTRUCTION_DATA;
+            data_buf[offset..offset + len].copy_from_slice(&instr[..len]);
         }
         proposal.instruction_data = data_buf;
-
         proposal.yes_votes = 0;
         proposal.no_votes = 0;
         proposal.voting_end = clock.unix_timestamp
@@ -98,7 +99,7 @@ pub mod zk_governance {
         emit!(ProposalCreated {
             proposal_id: proposal.id,
             proposer: staker.key(),
-            description: description[..description.len().min(100)].to_string(),
+            description: desc_preview,
             emergency,
         });
         Ok(())
@@ -164,7 +165,7 @@ pub mod zk_governance {
     }
 
     pub fn execute_proposal(ctx: Context<ExecuteProposal>, proposal_id: u64) -> Result<()> {
-        let proposal = &ctx.accounts.proposal;
+        let proposal = &mut ctx.accounts.proposal;
         let clock = Clock::get()?;
 
         require!(proposal.status == ProposalStatus::Queued as u8, GovernanceError::ProposalNotQueued);
@@ -174,7 +175,7 @@ pub mod zk_governance {
         );
 
         let governance_bump = ctx.bumps.governance_pda;
-        let seeds = &[b"governance-pda", &[governance_bump]];
+        let seeds = &[b"governance-pda".as_ref(), &[governance_bump]];
         let signer_seeds = &[&seeds[..]];
 
         for i in 0..proposal.target_count as usize {
@@ -250,6 +251,8 @@ pub mod zk_governance {
     }
 }
 
+// --- Data types ---
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq)]
 pub enum VoteType {
     Yes,
@@ -263,6 +266,8 @@ pub enum ProposalStatus {
     Executed = 2,
     Cancelled = 3,
 }
+
+// --- Accounts ---
 
 #[account]
 #[derive(InitSpace)]
@@ -278,11 +283,11 @@ pub struct GovernanceConfig {
 pub struct Proposal {
     pub id: u64,
     pub proposer: Pubkey,
-    #[max_len(PROPOSAL_DESCRIPTION_MAX_LEN)]
+    #[max_len(200)]
     pub description: String,
     pub target_count: u8,
-    pub targets: [u8; MAX_TARGETS * 32],
-    pub instruction_data: [u8; MAX_TARGETS * MAX_INSTRUCTION_DATA],
+    pub targets: [u8; 128],          // MAX_TARGETS * 32
+    pub instruction_data: [u8; 256], // MAX_TARGETS * MAX_INSTRUCTION_DATA
     pub yes_votes: u64,
     pub no_votes: u64,
     pub voting_end: i64,
@@ -292,6 +297,8 @@ pub struct Proposal {
     pub status: u8,
     pub bump: u8,
 }
+
+// --- Instruction contexts ---
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -315,11 +322,17 @@ pub struct CreateProposal<'info> {
     #[account(mut)]
     pub staker: Signer<'info>,
 
+    #[account(
+        mut,
+        seeds = [b"governance-config"],
+        bump,
+    )]
     pub config: Account<'info, GovernanceConfig>,
 
     #[account(
         seeds = [b"stake", staker.key().as_ref()],
         bump,
+        seeds::program = zkc_token_program.key(),
     )]
     pub stake_account: Account<'info, zkc_token::StakeAccount>,
 
@@ -332,6 +345,9 @@ pub struct CreateProposal<'info> {
     )]
     pub proposal: Account<'info, Proposal>,
 
+    /// CHECK: zkc-token program for cross-program PDA derivation
+    pub zkc_token_program: AccountInfo<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -340,6 +356,10 @@ pub struct CreateProposal<'info> {
 pub struct CastVote<'info> {
     pub voter: Signer<'info>,
 
+    #[account(
+        seeds = [b"governance-config"],
+        bump,
+    )]
     pub config: Account<'info, GovernanceConfig>,
 
     #[account(
@@ -352,8 +372,12 @@ pub struct CastVote<'info> {
     #[account(
         seeds = [b"stake", voter.key().as_ref()],
         bump,
+        seeds::program = zkc_token_program.key(),
     )]
     pub stake_account: Account<'info, zkc_token::StakeAccount>,
+
+    /// CHECK: zkc-token program for cross-program PDA derivation
+    pub zkc_token_program: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -361,6 +385,10 @@ pub struct CastVote<'info> {
 pub struct QueueProposal<'info> {
     pub caller: Signer<'info>,
 
+    #[account(
+        seeds = [b"governance-config"],
+        bump,
+    )]
     pub config: Account<'info, GovernanceConfig>,
 
     #[account(
@@ -370,9 +398,7 @@ pub struct QueueProposal<'info> {
     )]
     pub proposal: Account<'info, Proposal>,
 
-    /// Staking vault token account from zkc-token program — balance used for quorum check
-    /// PDA: seeds [b"staking-vault"] under zkc-token program ID
-    #[account()]
+    /// Staking vault token account — balance used for quorum check
     pub staking_vault: InterfaceAccount<'info, TokenAccount>,
 }
 
@@ -382,6 +408,10 @@ pub struct ExecuteProposal<'info> {
     #[account(mut)]
     pub executor: Signer<'info>,
 
+    #[account(
+        seeds = [b"governance-config"],
+        bump,
+    )]
     pub config: Account<'info, GovernanceConfig>,
 
     /// CHECK: governance PDA — signs as authority for CPI calls
@@ -405,6 +435,10 @@ pub struct CancelProposal<'info> {
     #[account(mut)]
     pub canceller: Signer<'info>,
 
+    #[account(
+        seeds = [b"governance-config"],
+        bump,
+    )]
     pub config: Account<'info, GovernanceConfig>,
 
     #[account(
@@ -427,6 +461,8 @@ pub struct UpdateGovernanceConfig<'info> {
     pub config: Account<'info, GovernanceConfig>,
 }
 
+// --- Errors ---
+
 #[error_code]
 pub enum GovernanceError {
     #[msg("Protocol is paused")]
@@ -435,7 +471,7 @@ pub enum GovernanceError {
     DescriptionTooLong,
     #[msg("No target programs specified")]
     NoTargets,
-    #[msg("Too many target programs (max 8)")]
+    #[msg("Too many target programs (max 4)")]
     TooManyTargets,
     #[msg("Targets and instructions length mismatch")]
     TargetsInstructionsMismatch,
@@ -468,6 +504,8 @@ pub enum GovernanceError {
     #[msg("No staked tokens in the staking vault")]
     NoStakedTokens,
 }
+
+// --- Events ---
 
 #[event]
 pub struct GovernanceInitialized {

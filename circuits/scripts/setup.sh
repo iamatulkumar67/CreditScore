@@ -48,4 +48,29 @@ for entry in "${CIRCUITS[@]}"; do
 done
 
 echo ""
+echo "=== Phase 3: Export to public/circuits/ ==="
+PUBLIC_DIR="$ROOT_DIR/../public/circuits"
+for entry in "${CIRCUITS[@]}"; do
+  SUBDIR="${entry%%:*}"
+  CIRCUIT="${entry##*:}"
+  SRC_DIR="$BUILD_DIR/$SUBDIR"
+  DEST_DIR="$PUBLIC_DIR/$CIRCUIT"
+  mkdir -p "$DEST_DIR"
+
+  WASM_SRC="$SRC_DIR/${CIRCUIT}_js/${CIRCUIT}.wasm"
+  ZKEY_SRC="$SRC_DIR/${CIRCUIT}_final.zkey"
+  VK_SRC="$SRC_DIR/verification_key.json"
+
+  if [ ! -f "$WASM_SRC" ] || [ ! -f "$ZKEY_SRC" ] || [ ! -f "$VK_SRC" ]; then
+    echo "  Skipping $CIRCUIT — artifacts incomplete"
+    continue
+  fi
+
+  cp "$WASM_SRC" "$DEST_DIR/${CIRCUIT}.wasm"
+  cp "$ZKEY_SRC" "$DEST_DIR/${CIRCUIT}_final.zkey"
+  cp "$VK_SRC" "$DEST_DIR/verification_key.json"
+  echo "  -> $DEST_DIR"
+done
+
+echo ""
 echo "=== Setup complete ==="

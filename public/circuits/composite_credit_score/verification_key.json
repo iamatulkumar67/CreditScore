@@ -1,0 +1,80 @@
+{
+  "protocol": "groth16",
+  "curve": "bn128",
+  "nPublic": 4,
+  "vk_alpha_1": [
+    "f03e223dcf14a94891d97a782d4d8b55cf1d3be6aebf0c1126b7f1feb2163328",
+    "ed067f76a8d575e76c50a00b9d9ab611493ee75e6dea96b8a06d409874bc849c",
+    "1"
+  ],
+  "vk_beta_2": [
+    [
+      "a43150d735bb9309e8cb69da93b43a49d12e589127aa4b26d60468afa713bee4",
+      "ddad4ed0c0228540c7f730fc187f2e777b7af0788491c7675e7f6e0a9248aa2f"
+    ],
+    [
+      "b99defe8f533f267b6ecc9e502b42b249ac24e8d57416f118225ec02425cd591",
+      "f0fba9998c3ab7f57848f593447f8eb8a6014c4b37f690fb38feca812853aee1"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_gamma_2": [
+    [
+      "f8438134c29c697d4dec2ba3551dc2dc8a8e247b1ff4b77548d593193956215a",
+      "5b5659c6d21686a2b4a3f38f424d018f7af143956cce617cbf0a2298a5478162"
+    ],
+    [
+      "a21d0e510c49967b72bf5eee2a4d4431bf214331ae8fea457bef2ad5e42de64b",
+      "780c1695930a6c4b901f85f74dd99377524c659f6b7f6c56019bdd3cdc245bc1"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_delta_2": [
+    [
+      "e398f0f747fc187e9f7fdeb5120e00cde10815ff31b6c62b2ec0c07a810bdebc",
+      "3c416adec0213888a474e9d541c006ebadffe79d947c4920160a543d4a9e3e4c"
+    ],
+    [
+      "077a9918a315179ca2fcd19bbfada53d3035c38fbdef20a6180f3f33b6c6cecb",
+      "fc9e54150aea46cebcb570e26cd78e2f9c80926171ef8e99996a704438c65cbc"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "IC": [
+    [
+      "77b8bb913772b9c4debe57c9427f8f5e4fe6cd57fc0a93019bab1ef3e6f7cd78",
+      "3f96825f68f68728a142426648663992da966c6ec318f887b7a59bb705b3a5a6",
+      "1"
+    ],
+    [
+      "af697da907e314045b17e241f84b174451cd460386c08e432afe085a076f1a56",
+      "4b0bf9161197178a49cc3e2e6f8e63251feca6a04887c71ab9fbccfa0f747734",
+      "1"
+    ],
+    [
+      "26ee7f7402a641d21f670674cce47aec14120633cf9d96f58bf4439bab35e554",
+      "4ad4ccddf2d8edff702820972f901c0cbd911d8d42336adf6aed7ed2466da532",
+      "1"
+    ],
+    [
+      "f922ebb8b2774a265ad516dd3f0c3fb555659b1fbd2f7fb52025ae9146ac449d",
+      "b9e68879a7b7e7888f7b286604eb4bbc0e7a1c659ea83d144109faaa2efbdcac",
+      "1"
+    ],
+    [
+      "ef0aadfc898981897ddcaa9530fba28c9509b1510130bda6dbeca3a6a9dc6b5f",
+      "19049b4d7ce12abec528c540334db61b1b94287eac9430a6ccbb11b797ab9278",
+      "1"
+    ]
+  ],
+  "circuit": "composite_credit_score"
+}

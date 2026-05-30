@@ -3,10 +3,10 @@ pragma circom 2.1.0;
 include "poseidon.circom";
 include "comparators.circom";
 
-template CreditScoreAbove(threshold int) {
-    signal private input creditScore;
-    signal private input bureauTimestamp;
-    signal private input salt;
+template CreditScoreAbove(threshold) {
+    signal input creditScore;
+    signal input bureauTimestamp;
+    signal input salt;
 
     signal input addressCommitment;
     signal input thresholdPublic;
@@ -56,4 +56,4 @@ template CreditScoreAbove(threshold int) {
     isValid <== gte.out * validRange * fresh * commitmentMatch.out * nullifierEq.out;
 }
 
-component main = CreditScoreAbove(700);
+component main {public [addressCommitment, thresholdPublic, nullifier, expiryTimestamp]} = CreditScoreAbove(700);

@@ -74,6 +74,14 @@ jobs:
             target/deploy/zkc_token.so
         shell: bash
 
+      - name: Deploy zk-governance
+        run: |
+          cd anchor
+          solana program deploy \
+            --program-id target/deploy/zk_governance-keypair.json \
+            target/deploy/zk_governance.so
+        shell: bash
+
       - name: Output deployment summary
         run: |
           echo "## ✅ Devnet Deployment Complete" >> $GITHUB_STEP_SUMMARY

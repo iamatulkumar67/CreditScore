@@ -3,10 +3,10 @@ pragma circom 2.1.0;
 include "poseidon.circom";
 include "comparators.circom";
 
-template NoDefaultsHistory(years int) {
-    signal private input totalDefaults;
-    signal private input creditHistoryLength;
-    signal private input salt;
+template NoDefaultsHistory(years) {
+    signal input totalDefaults;
+    signal input creditHistoryLength;
+    signal input salt;
 
     signal input yearsThreshold;
     signal input addressCommitment;
@@ -36,4 +36,4 @@ template NoDefaultsHistory(years int) {
     isValid <== iz.out * sufficientHistory * nullifierEq.out;
 }
 
-component main = NoDefaultsHistory(3);
+component main {public [yearsThreshold, addressCommitment, nullifier, expiryTimestamp]} = NoDefaultsHistory(3);

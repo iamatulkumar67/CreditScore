@@ -76,4 +76,4 @@ template CompositeCreditScore() {
                  + gt30.out * (1 - gt50.out) * 1;
 }
 
-component main = CompositeCreditScore();
+component main {public [scoreThreshold, incomeThreshold, dtiThreshold, historyYearsThreshold, addressCommitment, nullifier, expiryTimestamp]} = CompositeCreditScore();

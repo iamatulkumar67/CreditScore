@@ -4,12 +4,12 @@ include "poseidon.circom";
 include "comparators.circom";
 
 template IncomeAbove() {
-    signal private input monthlyIncome;
-    signal private input incomeSource;
-    signal private input month1Income;
-    signal private input month2Income;
-    signal private input month3Income;
-    signal private input salt;
+    signal input monthlyIncome;
+    signal input incomeSource;
+    signal input month1Income;
+    signal input month2Income;
+    signal input month3Income;
+    signal input salt;
 
     signal input incomeThreshold;
     signal input addressCommitment;
@@ -63,4 +63,4 @@ template IncomeAbove() {
     isValid <== gte.out * avgGte.out * sourceValid * incomeStable * nullifierEq.out;
 }
 
-component main = IncomeAbove();
+component main {public [incomeThreshold, addressCommitment, nullifier, expiryTimestamp]} = IncomeAbove();

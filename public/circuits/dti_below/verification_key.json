@@ -1,0 +1,80 @@
+{
+  "protocol": "groth16",
+  "curve": "bn128",
+  "nPublic": 4,
+  "vk_alpha_1": [
+    "670dde4d7732107f05e9a82b245a9a0dbb0d190338486514164e1b1a2f97447d",
+    "595765fcb0579fa1350dc48d826340e0806328c56562a17f242f526b5d31a81f",
+    "1"
+  ],
+  "vk_beta_2": [
+    [
+      "34a373b2b3c6b459317f99a7e11e3a4ab88adedb6172ad6f8a4e8ad3396164d2",
+      "b7d6f185ebcb5fe349d6491388241ce4db1184b24b5bb9630fc3421ec1b38424"
+    ],
+    [
+      "588efdb3f70c8dd0a923fb8c7be611ac5f4ab2a409978940ecd483d95c11de1b",
+      "cea59901752b839c598cd69e0e04051fcba82be57a6caf824f80f054f705b0cb"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_gamma_2": [
+    [
+      "4b479618775f4b51064815a08e2cd84874600bd73ab04d9c1a6f95634437ceb5",
+      "d526542d79c3033d6961f33e3c4d71faf6ffdbf6fdde110ba4119f980fb04efd"
+    ],
+    [
+      "c373beab75a8339e7a83c1e383061497d9eccb4d5dfb7211f8ac146a4e089ece",
+      "357e39bd51d72e4a4b09a1bd13319710d8a32c227ccdc56ff6adf36439b555c6"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_delta_2": [
+    [
+      "09d18ee45146510ecbde327ff51380588c942654aa0addd0eac97655edff406f",
+      "d48e3202af7cf07b2c29887e9789c8e377501d518b038d5bb78d0015bd5d23b0"
+    ],
+    [
+      "3d75b1b2e9425a4542035586ad57d6a00e2624f2eb983a1f7b045675a95136c0",
+      "735625b2ce6d45eaa724b9f719920b6882edfcd07a75862176b164d60d751464"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "IC": [
+    [
+      "71d420ecb20b401776803c9fdd7c7665bbfc1941dba5c3b8cef36dc660a52b13",
+      "5cdfa42b7896e30a0de3b6708c3df0e451c7c5e66cf38ca96b03d7e1b326bcbb",
+      "1"
+    ],
+    [
+      "f1b3a19770b60663834dde2f05493cd4f426489799424111ebc6e33cf69c6f36",
+      "d67fdc085a7ecdc5299f23d5497c992db9a711e8306cb636c87dc81e9634f415",
+      "1"
+    ],
+    [
+      "78de54a5d7c9c7e56c3b9f8d1cc5c001056cdc3d3902b9f0a7f1dfe8a3a022dd",
+      "77819452ed4c03c3ef697ef46393f8c041c7b5365f364b64917e1ac1f04c12c7",
+      "1"
+    ],
+    [
+      "f3c4e57b9abd16eed780f92ccf07ac35d94fd7579609b437c99d47a7c87d9b66",
+      "e5bacb34b25a110304d9d58fb2035e1b76e0177278c5e8f813160fa96bfd5624",
+      "1"
+    ],
+    [
+      "c45f80d76a1216b03916e7e66ac6881d15434daaf554dad99c9351b2e78fb87c",
+      "b53ec58edf551f1885b36ab4de9140e1da5d25fa3d0c2c4e42594a017f558b60",
+      "1"
+    ]
+  ],
+  "circuit": "dti_below"
+}

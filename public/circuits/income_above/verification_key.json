@@ -1,0 +1,80 @@
+{
+  "protocol": "groth16",
+  "curve": "bn128",
+  "nPublic": 4,
+  "vk_alpha_1": [
+    "c962c349721a765c748b2c3d337953798f12f6d32f21f77ba55cea48e590333d",
+    "68471ce5f46003c016c54f29a6f92ebaf44e9d479b8f77e0a103d5a1f30bec52",
+    "1"
+  ],
+  "vk_beta_2": [
+    [
+      "6edca2acdb018e8235c4b5be1eb2832ce18a11af1cbebe2943e06eb9ededf140",
+      "751f6862db609ae72b6726c32498ca11b60f43b045498e0c9c2ab82623af4ab3"
+    ],
+    [
+      "4f83eda03caf0b19ba6eba2420152d6792db1b955493561fe491a201d5559d8b",
+      "2135245b071844acbfd190b4367fcf6b2b36fa17eb9d2a20b2666e547caa9dac"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_gamma_2": [
+    [
+      "9300c5a57121744195c52d31125f88fa8de38b32b250b1e6c2a58468aa356953",
+      "2691f1d710dc393491f190a1d9faf3f8eeeac465e0a23a76150ddde12b1ffc48"
+    ],
+    [
+      "90c1c4194bd5804b8c1f7c1c19594e4b2ce3bf4d6d29f129b956b321d3675827",
+      "bcfb52560e7b572872e056e5752dc6b09ab51bd0624ae06440ab1310f93c9133"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_delta_2": [
+    [
+      "63137f7ad3f8fe188eb274fe254d3cddbf3ca3d8f1e7077211ad848dac0a74ba",
+      "fe820e36e11bff7422e63306c41c4afe72545fcee33f60dfcf5d80b8a89c1b84"
+    ],
+    [
+      "2c464f335e443af0f49a112935804e0879af9d1b39725929fda53844f945cbfc",
+      "db0c25d3b99901389df7cbc6502b4c990c69217472db13a6965814e6753e2ff6"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "IC": [
+    [
+      "288ffe2ceb8dffb2808c5179b6046f03b15f5a03a4d4abbc0389d72c8906e981",
+      "a868298b7c344498639994fd034d9f029a5d23fa8dce38cb2e0bcf5a2b1c8779",
+      "1"
+    ],
+    [
+      "82241ed9d889dae969f5448ee8d44f674fc33ab73ccfb083c810c51ff197bb67",
+      "12c78f0fdbb5f1fde25925f324c008d7b22c5f4cbc8b3748fedca75e4c4cea52",
+      "1"
+    ],
+    [
+      "739c1f584129322c1e5132338acaeb4a52a15882593cca11dfeb2db864b2b932",
+      "04fb6896d106b63c24127d670cef217f878d3da38665bcf226dc3e2dbfb26b2d",
+      "1"
+    ],
+    [
+      "8dc12fa71fd20e30efd5e7dc3ce03d9105694d1bd9d397b050c5a9be357121b1",
+      "eb1e1a4e956ecf512fc243a764bb352b5e218a376ab5c980b5cdcbd5bc88cfe4",
+      "1"
+    ],
+    [
+      "969fe1f2cfb3a1eb2b63bc728d15ecc0bd8bd5f240d006ed33048f253edf28f3",
+      "2ee790c277d614859a26dada0f943e69f2fcc07743b9c086a06e0f3bee74838a",
+      "1"
+    ]
+  ],
+  "circuit": "income_above"
+}

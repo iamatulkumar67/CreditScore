@@ -1,0 +1,80 @@
+{
+  "protocol": "groth16",
+  "curve": "bn128",
+  "nPublic": 4,
+  "vk_alpha_1": [
+    "d7610a8b2586361ef174e3b41b9a6e6fe9e852172b9ebd7c9203492ff8f7df0f",
+    "257556cbedbc1eac526530277d0ce4ab85170874921f205a6e96ed38a0fbb882",
+    "1"
+  ],
+  "vk_beta_2": [
+    [
+      "36dc45c1253d61ddb5a0856798d76c3557c8715a39a39cd0cb413ea254144587",
+      "e2dfa959fd729e4c0f4519a25e194d528f8acb6947aee5bd1e21d274df5ee86f"
+    ],
+    [
+      "ab061b3f6e11ca4893055bd4833922e21785c526d2bf5e951ba0c1558cd0ff1a",
+      "8a8c842723a777024ca67c353d2a8a5f33cfaa38649053919886752c5330fe4f"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_gamma_2": [
+    [
+      "67d52d2d4f7926c293e8bd7477b17d5eef093614fe9fe088ad4dc6f850aa063c",
+      "d09739cb0e56128e0c36641cceb426b92a6abd3624b2b68b4b1b1a2cd25aeb42"
+    ],
+    [
+      "b4386c3873270e4f5456a438b07701ec36002fe792e530a3d2504a9882bfade3",
+      "076ac21ab1b482e989550e6bc164493ff71a1150f1ddca6d6dd57f11b8b7274d"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "vk_delta_2": [
+    [
+      "adab7daca293c772f429c3bba705d1471bec1793e24d71763be240c87ab61152",
+      "8732fbb929ad8f7af9ef16de3d1a3e3f367207e58f2d1b88060e449c61f4540b"
+    ],
+    [
+      "46404d1b4469dff744f09a9ac557e608a56eec18bf3672d219475e2c29c16fb6",
+      "6a1c41e01be096a7b6c8ce327dc2c1d085c84072058d1468641df30cb9e31b61"
+    ],
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "IC": [
+    [
+      "d8705b3a76b8af7590590300a151ff7c63a6df5cb18ffe4c3002daf7834c421e",
+      "3b3b79aefaf8df9d5306e397f09e4bd2aafdd08f24ebd01b837c402be4c44f64",
+      "1"
+    ],
+    [
+      "9ce06ba271cfb5597717f0884ac9b88a2b48278deeee253bd7f76897f1f74ef0",
+      "52cf1248b6c9b9e38838c659c1321699b9b5d04d341d318e655415dc373dc9b2",
+      "1"
+    ],
+    [
+      "24269fb39b95db72d45117f04444af31a355281c94f890faf9fc51c0ab3fdf80",
+      "5712f2aea72db5e091f0f97ce545b77174ba211b7f6123e8a79cdc043e072c68",
+      "1"
+    ],
+    [
+      "5b188bfbf761fe4d3116604bb19a2f24ed7073f5a36910320739872b7bc1cf88",
+      "673c94a1f58c30e3334974cc2154c6a89ad87e5ed568c8f634a4e4177b09ce21",
+      "1"
+    ],
+    [
+      "e5fda9d90f3936e1e2af3d075b6a26d926d211647ae0a3fe19446d9ee3ddd965",
+      "70c464c7ddfe81e1f48b9faa51d3a48c0368d998f8842ba46e86f3a36775d25d",
+      "1"
+    ]
+  ],
+  "circuit": "credit_score_above"
+}

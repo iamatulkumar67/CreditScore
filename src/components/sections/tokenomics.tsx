@@ -151,7 +151,7 @@ export default function Tokenomics() {
                 <div className="space-y-3">
                   {[
                     { label: "Token Name", value: "ZKCredit (ZKCR)" },
-                    { label: "Contract Address", value: "4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump" },
+                    { label: "Contract Address", value: "AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ" },
                     { label: "Standard", value: "SPL (Token 2022)" },
                     { label: "Total Supply", value: "1,000,000,000 ZKCR" },
                     { label: "Primary Chain", value: "Solana Mainnet" },
