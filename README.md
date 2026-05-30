@@ -76,6 +76,21 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed system architect
 
 ---
 
+## Deployed Programs (Devnet)
+
+| Program | Program ID |
+|---|---|
+| **zk-credit-verifier** | `9fx3329hTirtrGA77bQ3qTQMHgkcYbiMJTSbY1kSK1Kh` |
+| **zk-lending-pool** | `HbHw6ib3eCfxbV1tv7X817VZ9J9tR4ZLGpNEQJ2jYDQo` |
+| **zkc-token** | `AdeWp5SXbwMtb3Mr9FTfpygPGzHoTdGqxAu3EKmmXRTQ` |
+| **zk-governance** | `4FE94XY5Az6fS2PCBxd2PZtzPq5EiXYT5EFPzYj53QkT` |
+
+All programs are deployed on **Solana Devnet** and can be viewed on [Solscan](https://solscan.io/).
+
+---
+
+
+
 ## Project Structure
 
 ```
