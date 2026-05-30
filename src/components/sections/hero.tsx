@@ -67,7 +67,7 @@ export default function Hero() {
                 Read Whitepaper
               </Button>
               <a
-                href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+                href="https://github.com/iamatulkumar67/CreditScore"
                 target="_blank"
                 rel="noopener noreferrer"
               >

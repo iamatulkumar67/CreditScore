@@ -52,7 +52,7 @@ export default function CTA() {
             Read Docs
           </Button>
           <a
-            href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+            href="https://github.com/iamatulkumar67/CreditScore"
             target="_blank"
             rel="noopener noreferrer"
           >

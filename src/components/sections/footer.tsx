@@ -16,7 +16,7 @@ const FOOTER_LINKS = [
     title: "Developers",
     links: [
       { label: "Documentation", href: "https://github.com/iamatulkumar67/CreditScore/tree/main/docs" },
-      { label: "Integration SDK", href: "https://github.com/iamatulkumar67/zkcreditscore-sdk" },
+      { label: "Integration SDK", href: "https://github.com/iamatulkumar67/CreditScore" },
       { label: "Smart Contracts", href: "#" },
       { label: "ZK Circuits", href: "#" },
     ],
@@ -61,7 +61,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3">
               {[
-                { icon: Github, href: "https://github.com/iamatulkumar67/zkcreditscore-sdk", label: "GitHub" },
+                { icon: Github, href: "https://github.com/iamatulkumar67/CreditScore", label: "GitHub" },
                 { icon: X, href: "https://x.com/ZkCreditScore", label: "X" },
                 { icon: Globe, href: "#", label: "Website" },
                 { icon: FileText, href: "#", label: "Docs" },
@@ -110,7 +110,7 @@ export default function Footer() {
             <span>Built on Solana</span>
             <span>•</span>
             <a
-              href="https://github.com/iamatulkumar67/zkcreditscore-sdk"
+              href="https://github.com/iamatulkumar67/CreditScore"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-emerald-300 transition-colors"
