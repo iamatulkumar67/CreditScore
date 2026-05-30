@@ -18,10 +18,12 @@ template IncomeAbove() {
 
     signal output isValid;
 
+    // Check: monthlyIncome >= incomeThreshold
     component gte = GreaterEqThan(64);
     gte.in[0] <== monthlyIncome;
     gte.in[1] <== incomeThreshold;
 
+    // 3-month average check
     signal sumIncome;
     sumIncome <== month1Income + month2Income + month3Income;
 
@@ -29,6 +31,7 @@ template IncomeAbove() {
     avgGte.in[0] <== sumIncome;
     avgGte.in[1] <== incomeThreshold * 3;
 
+    // Income source valid (0=salary, 1=business, 2=freelance)
     component sourceLow = GreaterEqThan(64);
     sourceLow.in[0] <== incomeSource;
     sourceLow.in[1] <== 0;
@@ -40,6 +43,7 @@ template IncomeAbove() {
     signal sourceValid;
     sourceValid <== sourceLow.out * sourceHigh.out;
 
+    // Income stability check
     component stable1 = GreaterEqThan(64);
     stable1.in[0] <== month1Income;
     stable1.in[1] <== month2Income;
@@ -51,6 +55,7 @@ template IncomeAbove() {
     signal incomeStable;
     incomeStable <== stable1.out * stable2.out;
 
+    // Nullifier verification
     component nullifierCheck = Poseidon(3);
     nullifierCheck.inputs[0] <== monthlyIncome;
     nullifierCheck.inputs[1] <== incomeSource;
@@ -60,7 +65,17 @@ template IncomeAbove() {
     nullifierEq.in[0] <== nullifierCheck.out;
     nullifierEq.in[1] <== nullifier;
 
-    isValid <== gte.out * avgGte.out * sourceValid * incomeStable * nullifierEq.out;
+    // Combine checks with intermediate signals
+    signal step1;
+    step1 <== gte.out * avgGte.out;
+
+    signal step2;
+    step2 <== step1 * sourceValid;
+
+    signal step3;
+    step3 <== step2 * incomeStable;
+
+    isValid <== step3 * nullifierEq.out;
 }
 
 component main {public [incomeThreshold, addressCommitment, nullifier, expiryTimestamp]} = IncomeAbove();

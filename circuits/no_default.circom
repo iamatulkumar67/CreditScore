@@ -15,15 +15,16 @@ template NoDefaultsHistory(years) {
 
     signal output isValid;
 
+    // Check: totalDefaults == 0
     component iz = IsZero();
     iz.in <== totalDefaults;
 
-    signal sufficientHistory;
+    // Check: creditHistoryLength >= years * 365 * 86400
     component historyCheck = GreaterEqThan(64);
     historyCheck.in[0] <== creditHistoryLength;
     historyCheck.in[1] <== years * 365 * 86400;
-    sufficientHistory <== historyCheck.out;
 
+    // Nullifier verification
     component nullifierCheck = Poseidon(3);
     nullifierCheck.inputs[0] <== totalDefaults;
     nullifierCheck.inputs[1] <== creditHistoryLength;
@@ -33,7 +34,11 @@ template NoDefaultsHistory(years) {
     nullifierEq.in[0] <== nullifierCheck.out;
     nullifierEq.in[1] <== nullifier;
 
-    isValid <== iz.out * sufficientHistory * nullifierEq.out;
+    // Combine checks
+    signal step1;
+    step1 <== iz.out * historyCheck.out;
+
+    isValid <== step1 * nullifierEq.out;
 }
 
 component main {public [yearsThreshold, addressCommitment, nullifier, expiryTimestamp]} = NoDefaultsHistory(3);
