@@ -6,7 +6,6 @@ import Link from "next/link";
 import React, { useEffect, useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { PublicKey } from "@solana/web3.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,19 +24,19 @@ import {
   Loader2,
 } from "lucide-react";
 import { SolanaWalletProvider } from "@/components/providers/wallet-provider";
-import { initSDK, getSDK, getIntegration, getAPI, destroySDK } from "@/lib/sdk";
+import { ActionModal } from "@/components/action-modal";
 
 const DEFAULT_POOLS = [
-  { name: "USDC Lending Pool", tvl: "$12.4M", apy: "6.8%", utilization: "72%", color: "text-blue-400" },
-  { name: "SOL Lending Pool", tvl: "$8.7M", apy: "5.2%", utilization: "65%", color: "text-purple-400" },
-  { name: "USDT Lending Pool", tvl: "$6.1M", apy: "7.1%", utilization: "81%", color: "text-green-400" },
-  { name: "mSOL Lending Pool", tvl: "$3.9M", apy: "4.5%", utilization: "58%", color: "text-emerald-400" },
+  { name: "USDC Lending Pool", tvl: "$45.0M", apy: "6.8%", utilization: "78%", color: "text-blue-400" },
+  { name: "SOL Lending Pool", tvl: "$25.0M", apy: "5.2%", utilization: "60%", color: "text-purple-400" },
+  { name: "USDT Lending Pool", tvl: "$15.0M", apy: "7.1%", utilization: "80%", color: "text-green-400" },
+  { name: "mSOL Lending Pool", tvl: "$10.0M", apy: "4.5%", utilization: "80%", color: "text-emerald-400" },
 ];
 
 const DEFAULT_STATS = [
-  { label: "Total Value Locked", value: "$38.2M", icon: BarChart3, change: "+12.4%" },
-  { label: "Active Loans", value: "1,847", icon: Activity, change: "+8.2%" },
-  { label: "Credentials Issued", value: "24,391", icon: UserCheck, change: "+23.7%" },
+  { label: "Total Value Locked", value: "$100.0M", icon: BarChart3, change: "+12.4%" },
+  { label: "Active Loans", value: "0", icon: Activity, change: "+8.2%" },
+  { label: "Credentials Issued", value: "0", icon: UserCheck, change: "+23.7%" },
   { label: "ZKCR Staked", value: "142.5M", icon: Coins, change: "+5.1%" },
 ];
 
@@ -54,90 +53,132 @@ function shortAddress(address: string) {
 }
 
 function useSDK() {
-  const { publicKey, wallet, connected } = useWallet();
+  const { publicKey, connected } = useWallet();
   const [creditTier, setCreditTier] = useState<{ tier: string; expiresAt: Date | null }>({ tier: "Not Verified", expiresAt: null });
   const [pools, setPools] = useState<PoolData[]>(DEFAULT_POOLS);
   const [stats, setStats] = useState(DEFAULT_STATS);
+  const [position, setPosition] = useState({ deposits: 0, borrowed: 0, available: 0, healthFactor: 0 });
   const [loading, setLoading] = useState(false);
+  const [poolSymbols, setPoolSymbols] = useState<string[]>(["USDC", "SOL", "USDT", "mSOL", "jitoSOL"]);
 
   useEffect(() => {
-    if (connected && wallet?.adapter) {
-      const sdk = initSDK(wallet.adapter);
-      setLoading(true);
+    setLoading(true);
+    const colors = ["text-blue-400", "text-purple-400", "text-green-400", "text-emerald-400", "text-cyan-400"];
 
-      Promise.allSettled([
-        getAPI().getStats().then((protocolStats) => {
-          if (protocolStats) {
-            setStats([
-              { label: "Total Value Locked", value: `$${protocolStats.totalTvlUsd || "38.2M"}`, icon: BarChart3, change: "+12.4%" },
-              { label: "Active Loans", value: protocolStats.activeLoans?.toString() || "1,847", icon: Activity, change: "+8.2%" },
-              { label: "Credentials Issued", value: protocolStats.totalCredentials?.toString() || "24,391", icon: UserCheck, change: "+23.7%" },
-              { label: "ZKCR Staked", value: protocolStats.zkcrStaked || "142.5M", icon: Coins, change: "+5.1%" },
-            ]);
-          }
-        }),
-        getAPI().getPools().then((poolInfos) => {
-          if (poolInfos && poolInfos.length > 0) {
-            setPools(poolInfos.map((p: any) => ({
-              name: p.symbol ? `${p.symbol} Lending Pool` : `${p.mint.slice(0, 8)}... Pool`,
-              tvl: `$${p.totalDeposits || "0"}`,
-              apy: `${p.borrowApy || 0}%`,
-              utilization: `${p.utilizationRate || 0}%`,
-              color: "text-emerald-400",
-            })));
-          }
-        }),
-        publicKey
-          ? getIntegration()?.getCreditTier(publicKey.toBase58()).then((info) => {
-              setCreditTier({
-                tier: info.isValid ? `Tier ${info.tier}` : "Not Verified",
-                expiresAt: info.isValid ? info.expiresAt : null,
+    Promise.allSettled([
+      fetch("/api/stats").then(r => r.json()).then(res => {
+        if (res.success && res.data) {
+          const d = res.data;
+          setStats([
+            { label: "Total Value Locked", value: `$${(d.totalTVL / 1e6).toFixed(1)}M`, icon: BarChart3, change: "+12.4%" },
+            { label: "Active Loans", value: d.activeLoans.toLocaleString(), icon: Activity, change: "+8.2%" },
+            { label: "Credentials Issued", value: d.totalCredentials.toLocaleString(), icon: UserCheck, change: "+23.7%" },
+            { label: "ZKCR Staked", value: "142.5M", icon: Coins, change: "+5.1%" },
+          ]);
+        }
+      }),
+      fetch("/api/pools").then(r => r.json()).then(res => {
+        if (res.success && res.data?.length > 0) {
+          setPoolSymbols(res.data.map((p: any) => p.symbol));
+          setPools(res.data.map((p: any, i: number) => ({
+            name: `${p.symbol} Lending Pool`,
+            tvl: `$${p.totalDeposits.toFixed(1)}M`,
+            apy: `${(p.borrowApy * 100).toFixed(1)}%`,
+            utilization: `${(p.utilizationRate * 100).toFixed(0)}%`,
+            color: colors[i % colors.length],
+          })));
+        }
+      }),
+      connected && publicKey
+        ? fetch(`/api/credentials/${publicKey.toBase58()}`).then(r => r.json()).then(res => {
+            if (res.success && res.data) {
+              setCreditTier({ tier: `Tier ${res.data.creditTier}`, expiresAt: new Date(res.data.expiresAt) });
+            }
+          })
+        : Promise.resolve(),
+      connected && publicKey
+        ? fetch(`/api/loans/${publicKey.toBase58()}`).then(r => r.json()).then(res => {
+            if (res.success && res.data) {
+              const active = res.data.filter((l: any) => l.status === "active");
+              const totalBorrowed = active.reduce((s: number, l: any) => s + l.borrowAmount, 0);
+              const totalCollateral = active.reduce((s: number, l: any) => s + l.collateralAmount, 0);
+              setPosition({
+                deposits: totalCollateral,
+                borrowed: totalBorrowed,
+                available: Math.max(0, totalCollateral * 0.8 - totalBorrowed),
+                healthFactor: totalBorrowed > 0 ? totalCollateral / totalBorrowed : 0,
               });
-            }).catch(() => {})
-          : Promise.resolve(),
-      ]).finally(() => setLoading(false));
-
-      return () => destroySDK();
-    } else {
-      destroySDK();
-      setCreditTier({ tier: "Not Verified", expiresAt: null });
-    }
+            }
+          })
+        : Promise.resolve(),
+    ]).finally(() => setLoading(false));
   }, [connected, publicKey?.toBase58()]);
 
-  return { creditTier, pools, stats, loading };
+  return { creditTier, pools, stats, position, loading, poolSymbols };
 }
 
 function Dashboard() {
   const { publicKey, connected, disconnect, connecting } = useWallet();
   const { setVisible } = useWalletModal();
-  const { creditTier, pools, stats, loading } = useSDK();
+  const { creditTier, pools, stats, position, loading, poolSymbols } = useSDK();
   const [generating, setGenerating] = useState(false);
+  const [showBorrow, setShowBorrow] = useState(false);
+  const [showSupply, setShowSupply] = useState(false);
+  const [showStake, setShowStake] = useState(false);
 
   const handleGenerateProof = useCallback(async () => {
-    if (!connected) {
-      setVisible(true);
-      return;
-    }
+    if (!connected || !publicKey) { setVisible(true); return; }
     setGenerating(true);
     try {
-      const { ZKProver } = await import('zkcreditscore-sdk');
-      const prover = new ZKProver();
-      await prover.init({ circuitsUrl: '' });
-      const proof = await prover.generateProof({
-        type: 0 as any,
-        threshold: 700,
-        dataSourceId: 'demo',
+      // Simulate ZK proof generation and issue credential
+      await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerAddress: publicKey.toBase58(), creditTier: 2, claimsBitmap: 1 }),
       });
-      const sdk = getSDK();
-      if (sdk) {
-        await sdk.verifier.verifyAndIssueCredential(proof);
-      }
+      window.location.reload();
     } catch (e) {
-      console.error('Proof generation failed:', e);
+      console.error("Proof generation failed:", e);
     } finally {
       setGenerating(false);
     }
-  }, [connected, setVisible]);
+  }, [connected, publicKey, setVisible]);
+
+  const handleBorrow = async (data: { pool?: string; amount: number; collateral?: number }) => {
+    if (!publicKey) return;
+    const res = await fetch("/api/borrow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ borrowerAddress: publicKey.toBase58(), poolSymbol: data.pool, borrowAmount: data.amount, collateralAmount: data.collateral }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    window.location.reload();
+  };
+
+  const handleSupply = async (data: { pool?: string; amount: number }) => {
+    if (!publicKey) return;
+    const res = await fetch("/api/supply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ supplierAddress: publicKey.toBase58(), poolSymbol: data.pool, amount: data.amount }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    window.location.reload();
+  };
+
+  const handleStake = async (data: { amount: number }) => {
+    if (!publicKey) return;
+    const res = await fetch("/api/stake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stakerAddress: publicKey.toBase58(), amount: data.amount }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-[#060b09]">
@@ -145,10 +186,7 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-emerald-100/50 hover:text-emerald-300 transition-colors"
-              >
+              <Link href="/" className="flex items-center gap-2 text-emerald-100/50 hover:text-emerald-300 transition-colors">
                 <ArrowLeft className="h-4 w-4" />
                 <span className="text-sm">Back to Home</span>
               </Link>
@@ -159,37 +197,22 @@ function Dashboard() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
-              >
+              <Button variant="outline" className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">
                 <Zap className="h-4 w-4 mr-1" />
                 Devnet
               </Button>
               {connected ? (
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30"
-                  >
+                  <Button variant="ghost" className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30">
                     <Wallet className="h-4 w-4 mr-1" />
                     {shortAddress(publicKey!.toBase58())}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={disconnect}
-                    className="text-emerald-100/50 hover:text-red-400 hover:bg-red-500/10"
-                    title="Disconnect"
-                  >
+                  <Button variant="ghost" onClick={disconnect} className="text-emerald-100/50 hover:text-red-400 hover:bg-red-500/10" title="Disconnect">
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <Button
-                  onClick={() => setVisible(true)}
-                  disabled={connecting}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white"
-                >
+                <Button onClick={() => setVisible(true)} disabled={connecting} className="bg-emerald-600 hover:bg-emerald-500 text-white">
                   <Wallet className="h-4 w-4 mr-1" />
                   {connecting ? "Connecting..." : "Connect Wallet"}
                 </Button>
@@ -208,26 +231,14 @@ function Dashboard() {
               </div>
               <div>
                 <p className="text-sm text-emerald-100/50">Your Credit Tier</p>
-                <p className="text-xl font-bold gradient-text">
-                  {loading ? "Loading..." : creditTier.tier}
-                </p>
+                <p className="text-xl font-bold gradient-text">{loading ? "Loading..." : creditTier.tier}</p>
                 <p className="text-xs text-emerald-100/40 mt-0.5">
-                  {creditTier.expiresAt
-                    ? `Expires ${creditTier.expiresAt.toLocaleDateString()}`
-                    : "Generate a ZK proof to unlock under-collateralized loans"}
+                  {creditTier.expiresAt ? `Expires ${creditTier.expiresAt.toLocaleDateString()}` : "Generate a ZK proof to unlock under-collateralized loans"}
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleGenerateProof}
-              disabled={generating}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white"
-            >
-              {generating ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              ) : (
-                <Shield className="mr-1 h-4 w-4" />
-              )}
+            <Button onClick={handleGenerateProof} disabled={generating} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+              {generating ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Shield className="mr-1 h-4 w-4" />}
               {generating ? "Generating..." : "Generate ZK Proof"}
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
@@ -267,10 +278,7 @@ function Dashboard() {
                     <span className="text-right">Utilization</span>
                   </div>
                   {pools.map((pool) => (
-                    <div
-                      key={pool.name}
-                      className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-emerald-500/5 transition-colors cursor-pointer group"
-                    >
+                    <div key={pool.name} className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-emerald-500/5 transition-colors cursor-pointer group">
                       <span className="text-sm text-emerald-100/80 group-hover:text-emerald-300 transition-colors flex items-center gap-2">
                         <div className={`h-2 w-2 rounded-full ${pool.color.replace("text", "bg")}`} />
                         {pool.name}
@@ -292,17 +300,12 @@ function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {[
-                  { label: "Borrow", desc: "Get a loan against collateral", icon: Coins, action: () => {} },
-                  { label: "Supply", desc: "Earn interest on deposits", icon: TrendingUp, action: () => {} },
-                  { label: "Stake ZKCR", desc: "Stake tokens for rewards", icon: Zap, action: () => {} },
+                  { label: "Borrow", desc: "Get a loan against collateral", icon: Coins, action: () => connected ? setShowBorrow(true) : setVisible(true) },
+                  { label: "Supply", desc: "Earn interest on deposits", icon: TrendingUp, action: () => connected ? setShowSupply(true) : setVisible(true) },
+                  { label: "Stake ZKCR", desc: "Stake tokens for rewards", icon: Zap, action: () => connected ? setShowStake(true) : setVisible(true) },
                   { label: "Verify Identity", desc: "Generate ZK credential", icon: Lock, action: handleGenerateProof },
                 ].map((action) => (
-                  <Button
-                    key={action.label}
-                    variant="ghost"
-                    onClick={action.action}
-                    className="w-full justify-start gap-3 h-auto py-3 px-4 text-left"
-                  >
+                  <Button key={action.label} variant="ghost" onClick={action.action} className="w-full justify-start gap-3 h-auto py-3 px-4 text-left">
                     <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                       <action.icon className="h-4 w-4 text-emerald-400" />
                     </div>
@@ -322,19 +325,14 @@ function Dashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { label: "Total Deposits", value: connected ? "$0.00" : "—" },
-                    { label: "Total Borrowed", value: connected ? "$0.00" : "—" },
-                    { label: "Available to Borrow", value: connected ? "$0.00" : "—" },
-                    { label: "Health Factor", value: connected ? "—" : "—" },
+                    { label: "Total Deposits", value: connected ? `$${position.deposits.toFixed(2)}` : "—" },
+                    { label: "Total Borrowed", value: connected ? `$${position.borrowed.toFixed(2)}` : "—" },
+                    { label: "Available to Borrow", value: connected ? `$${position.available.toFixed(2)}` : "—" },
+                    { label: "Health Factor", value: connected ? (position.healthFactor > 0 ? position.healthFactor.toFixed(2) : "—") : "—" },
                   ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex items-center justify-between py-1"
-                    >
+                    <div key={item.label} className="flex items-center justify-between py-1">
                       <span className="text-xs text-emerald-100/50">{item.label}</span>
-                      <span className="text-sm font-medium text-emerald-100/80">
-                        {item.value}
-                      </span>
+                      <span className="text-sm font-medium text-emerald-100/80">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -358,15 +356,17 @@ function Dashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">{shortAddress(publicKey.toBase58())}</p>
-                  <p className="text-xs text-emerald-100/40">
-                    Connected via Phantom on Devnet
-                  </p>
+                  <p className="text-xs text-emerald-100/40">Connected via Phantom on Devnet</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
       </main>
+
+      <ActionModal open={showBorrow} onClose={() => setShowBorrow(false)} title="Borrow" type="borrow" pools={poolSymbols} onSubmit={handleBorrow} />
+      <ActionModal open={showSupply} onClose={() => setShowSupply(false)} title="Supply" type="supply" pools={poolSymbols} onSubmit={handleSupply} />
+      <ActionModal open={showStake} onClose={() => setShowStake(false)} title="Stake ZKCR" type="stake" onSubmit={handleStake} />
     </div>
   );
 }
@@ -379,18 +379,10 @@ class ErrorBoundary extends React.Component<
     super(props);
     this.state = { hasError: false, error: null };
   }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught:", error, errorInfo);
-  }
-
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { console.error("ErrorBoundary caught:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) return this.props.fallback;
       return (
         <div className="min-h-screen bg-[#060b09] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-8">
@@ -398,26 +390,10 @@ class ErrorBoundary extends React.Component<
               <Shield className="h-8 w-8 text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
-            <p className="text-emerald-100/60 mb-2">
-              {this.state.error?.message || "An unexpected error occurred"}
-            </p>
-            <p className="text-emerald-100/40 text-sm mb-6">
-              This is likely due to a wallet connection or SDK issue. Please try reloading.
-            </p>
+            <p className="text-emerald-100/60 mb-2">{this.state.error?.message || "An unexpected error occurred"}</p>
             <div className="flex gap-3 justify-center">
-              <Button
-                onClick={() => window.location.reload()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white"
-              >
-                Reload
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => { this.setState({ hasError: false, error: null }); }}
-                className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
-              >
-                Try again
-              </Button>
+              <Button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-500 text-white">Reload</Button>
+              <Button variant="outline" onClick={() => this.setState({ hasError: false, error: null })} className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">Try again</Button>
             </div>
           </div>
         </div>

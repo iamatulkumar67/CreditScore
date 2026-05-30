@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -24,7 +25,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-const TVL_DATA = [
+const FALLBACK_TVL = [
   { month: "Jul", tvl: 5, loans: 2 },
   { month: "Aug", tvl: 12, loans: 5 },
   { month: "Sep", tvl: 18, loans: 8 },
@@ -39,7 +40,7 @@ const TVL_DATA = [
   { month: "Jun", tvl: 100, loans: 48 },
 ];
 
-const TIER_DISTRIBUTION = [
+const FALLBACK_TIERS = [
   { name: "None (Tier 0)", value: 25, color: "#6b7280" },
   { name: "Basic (Tier 1)", value: 20, color: "#f59e0b" },
   { name: "Good (Tier 2)", value: 30, color: "#10b981" },
@@ -121,6 +122,46 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 };
 
 export default function ProtocolStats() {
+  const [tvlData, setTvlData] = useState(FALLBACK_TVL);
+  const [tierDist, setTierDist] = useState(FALLBACK_TIERS);
+  const [liveStats, setLiveStats] = useState(STATS);
+
+  useEffect(() => {
+    fetch("/api/analytics").then(r => r.json()).then(res => {
+      if (res.success && res.data) {
+        if (res.data.tvlHistory?.length > 0) {
+          const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+          setTvlData(res.data.tvlHistory.map((h: any) => ({
+            month: months[parseInt(h.month.split("-")[1]) - 1] || h.month,
+            tvl: h.tvl,
+            loans: h.loans,
+          })));
+        }
+        if (res.data.tierDistribution?.length > 0) {
+          const colors = ["#6b7280", "#f59e0b", "#10b981", "#14b8a6", "#2dd4bf"];
+          setTierDist(res.data.tierDistribution.map((t: any) => ({
+            name: `${t.name} (Tier ${t.tier})`,
+            value: t.percentage || 20,
+            color: colors[t.tier] || "#10b981",
+          })));
+        }
+      }
+    }).catch(() => {});
+
+    fetch("/api/stats").then(r => r.json()).then(res => {
+      if (res.success && res.data) {
+        const d = res.data;
+        setLiveStats([
+          { icon: DollarSign, label: "Total Value Locked", value: `$${(d.totalTVL / 1e6).toFixed(0)}M`, change: "+28.5%", positive: true },
+          { icon: Users, label: "ZK Credentials Issued", value: d.totalCredentials.toLocaleString(), change: "+45.2%", positive: true },
+          { icon: Activity, label: "Active Loans", value: d.activeLoans.toLocaleString(), change: "+33.1%", positive: true },
+          { icon: Shield, label: "Default Rate", value: `${(d.defaultRate * 100).toFixed(1)}%`, change: "-1.2%", positive: true },
+          { icon: TrendingUp, label: "Capital Efficiency", value: `+${(d.capitalEfficiency * 100).toFixed(0)}%`, change: "vs Standard", positive: true },
+          { icon: BarChart3, label: "Protocol Integrations", value: `${d.protocolIntegrations}+`, change: "3 new", positive: true },
+        ]);
+      }
+    }).catch(() => {});
+  }, []);
   return (
     <section className="relative py-24 overflow-hidden" id="dashboard">
       <div className="absolute inset-0 dot-pattern opacity-15" />
@@ -144,7 +185,7 @@ export default function ProtocolStats() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          {STATS.map((stat) => (
+          {liveStats.map((stat) => (
             <Card
               key={stat.label}
               className="glass-card border-emerald-500/10 bg-transparent hover:border-emerald-500/30 transition-all"
@@ -180,7 +221,7 @@ export default function ProtocolStats() {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={TVL_DATA}>
+                  <AreaChart data={tvlData}>
                     <defs>
                       <linearGradient id="tvlGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -238,7 +279,7 @@ export default function ProtocolStats() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={TIER_DISTRIBUTION}
+                      data={tierDist}
                       cx="50%"
                       cy="50%"
                       innerRadius={55}
@@ -246,7 +287,7 @@ export default function ProtocolStats() {
                       paddingAngle={3}
                       dataKey="value"
                     >
-                      {TIER_DISTRIBUTION.map((entry, index) => (
+                      {tierDist.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -262,7 +303,7 @@ export default function ProtocolStats() {
                 </ResponsiveContainer>
               </div>
               <div className="space-y-2 mt-2">
-                {TIER_DISTRIBUTION.map((item) => (
+                {tierDist.map((item) => (
                   <div key={item.name} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <div
