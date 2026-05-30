@@ -21,7 +21,7 @@ function CABanner() {
   const ca = "4A1AR7H5VHQzwM7QuucYDHKTrQWt9HQ1GyEB4gh4pump";
   const copy = () => navigator.clipboard.writeText(ca);
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-emerald-600/20 backdrop-blur-sm border-b border-emerald-500/10 text-white text-center py-1.5 text-sm font-mono cursor-pointer hover:bg-emerald-600/30 transition-colors" onClick={copy}>
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-emerald-600/20 backdrop-blur-sm border-b-0 md:border-b md:border-emerald-500/10 text-white text-center py-1.5 text-xs sm:text-sm font-mono cursor-pointer hover:bg-emerald-600/30 transition-colors" onClick={copy}>
       CA: {ca} <span className="text-emerald-200/70 text-xs ml-2">(click to copy)</span>
     </div>
   );
