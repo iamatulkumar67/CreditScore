@@ -23,7 +23,7 @@ import {
   LogOut,
   Loader2,
 } from "lucide-react";
-import { SolanaWalletProvider } from "@/components/providers/wallet-provider";
+import ErrorBoundary from "@/components/error-boundary";
 import { ActionModal } from "@/components/action-modal";
 
 const DEFAULT_POOLS = [
@@ -62,6 +62,7 @@ function useSDK() {
   const [poolSymbols, setPoolSymbols] = useState<string[]>(["USDC", "SOL", "USDT", "mSOL", "jitoSOL"]);
 
   useEffect(() => {
+    const load = async () => {
     setLoading(true);
     const colors = ["text-blue-400", "text-purple-400", "text-green-400", "text-emerald-400", "text-cyan-400"];
 
@@ -112,6 +113,8 @@ function useSDK() {
           })
         : Promise.resolve(),
     ]).finally(() => setLoading(false));
+    };
+    load();
   }, [connected, publicKey?.toBase58()]);
 
   return { creditTier, pools, stats, position, loading, poolSymbols };
@@ -371,44 +374,10 @@ function Dashboard() {
   );
 }
 
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { console.error("ErrorBoundary caught:", error, errorInfo); }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-[#060b09] flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-8">
-            <div className="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
-              <Shield className="h-8 w-8 text-red-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
-            <p className="text-emerald-100/60 mb-2">{this.state.error?.message || "An unexpected error occurred"}</p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-500 text-white">Reload</Button>
-              <Button variant="outline" onClick={() => this.setState({ hasError: false, error: null })} className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">Try again</Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 export default function AppPage() {
   return (
     <ErrorBoundary>
-      <SolanaWalletProvider>
-        <Dashboard />
-      </SolanaWalletProvider>
+      <Dashboard />
     </ErrorBoundary>
   );
 }
