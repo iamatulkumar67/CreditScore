@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, ArrowLeft, CheckCircle, Rocket, Lock, Zap } from "lucide-react";
-import { insforge } from "@/lib/insforge";
 
 export default function BetaSignup() {
   const [form, setForm] = useState({ name: "", email: "", wallet_address: "", use_case: "" });
@@ -18,15 +17,23 @@ export default function BetaSignup() {
     if (!form.name || !form.email) return;
 
     setStatus("loading");
-    const { error } = await insforge.database
-      .from("beta_signups")
-      .insert({ name: form.name, email: form.email, wallet_address: form.wallet_address || null, use_case: form.use_case || null });
+    try {
+      const res = await fetch("/api/beta-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
 
-    if (error) {
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMsg(data.error === "duplicate" ? "This email is already registered for beta!" : "Something went wrong. Please try again.");
+      } else {
+        setStatus("success");
+      }
+    } catch {
       setStatus("error");
-      setErrorMsg(error.message?.includes("duplicate") ? "This email is already registered for beta!" : "Something went wrong. Please try again.");
-    } else {
-      setStatus("success");
+      setErrorMsg("Network error. Please try again.");
     }
   }
 
