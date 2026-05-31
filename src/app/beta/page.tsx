@@ -79,7 +79,7 @@ export default function BetaSignup() {
             Join the <span className="gradient-text">Beta</span>
           </h1>
           <p className="text-emerald-100/60">
-            Be among the first to access under-collateralized DeFi lending powered by Zero-Knowledge Proofs. Early beta users get priority access + exclusive ZKCR token allocation.
+            Be among the first to access under-collateralized DeFi lending powered by Zero-Knowledge Proofs. Early beta users get priority access + exclusive surprises at launch.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function BetaSignup() {
           {[
             { icon: Rocket, text: "Early Access" },
             { icon: Lock, text: "Privacy First" },
-            { icon: Zap, text: "ZKCR Airdrop" },
+            { icon: Zap, text: "Exclusive Surprises" },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="glass-card rounded-lg p-3 flex items-center gap-2">
               <Icon className="h-4 w-4 text-emerald-400" />
