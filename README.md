@@ -69,7 +69,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed system architect
 | **ZK Proofs** | Circom 2.1.0 + snarkjs (Groth16, BN128 curve) |
 | **Smart Contracts** | Rust (Anchor) |
 | **SDK** | TypeScript (ESM + CJS, published as `zkcreditscore-sdk`) |
-| **Database** | SQLite via Prisma (dev) |
+| **Database** | InsForge (PostgreSQL BaaS) |
 | **CI/CD** | GitHub Actions, Vercel |
 | **Auth** | Solana wallet signatures (no traditional auth) |
 | **Reverse Proxy** | Caddy |
@@ -127,7 +127,6 @@ All programs are deployed on **Solana Devnet** and can be viewed on [Solscan](ht
 │           ├── connectors/       # Data source connectors (Plaid)
 │           ├── types/            # TypeScript type definitions
 │           └── constants/        # Program IDs, configs, network URLs
-├── prisma/                       # Prisma schema (SQLite)
 ├── scripts/                      # Dev setup scripts, key generation
 ├── .github/workflows/            # CI/CD pipelines
 └── .zscripts/                    # Build/deploy automation scripts
@@ -155,9 +154,6 @@ bun install
 
 # Build SDK
 cd packages/sdk && npm run build && cd ../..
-
-# Set up database
-bun run db:push
 ```
 
 ### Run Development Server
@@ -195,7 +191,8 @@ cd packages/sdk && npm test
 
 | Variable | Description | Default | Required |
 |---|---|---|---|
-| `DATABASE_URL` | SQLite database file path | `file:./prisma/dev.db` | Yes |
+| `NEXT_PUBLIC_INSFORGE_URL` | InsForge backend URL | — | Yes |
+| `NEXT_PUBLIC_INSFORGE_ANON_KEY` | InsForge anonymous key | — | Yes |
 | `NEXT_PUBLIC_SOLANA_RPC` | Solana RPC endpoint | `https://api.devnet.solana.com` | No |
 | `NEXT_PUBLIC_VERIFIER_PROGRAM_ID` | zk-credit-verifier program ID | SDK default | No |
 | `NEXT_PUBLIC_LENDING_POOL_PROGRAM_ID` | zk-lending-pool program ID | SDK default | No |
@@ -211,9 +208,6 @@ cd packages/sdk && npm test
 | `bun run build` | Build Next.js for production (standalone) |
 | `bun run start` | Start production server |
 | `bun run lint` | Run ESLint across the project |
-| `bun run db:push` | Push Prisma schema to SQLite |
-| `bun run db:generate` | Generate Prisma client |
-| `bun run db:migrate` | Run Prisma migrations |
 | `npm test` (packages/sdk) | Run SDK tests |
 
 ---
