@@ -54,7 +54,7 @@ export default function Hero() {
                 size="lg"
                 className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-xl shadow-emerald-600/25 text-base px-8 h-12"
               >
-                <Link href="/app">
+                <Link href="/beta">
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
